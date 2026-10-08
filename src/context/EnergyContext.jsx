@@ -22,8 +22,19 @@ export function EnergyProvider({ children }) {
     // Energy Generation
     const solarEnergy = calcSolarEnergy(p.solar.capacity, p.solar.sunlightHours, p.solar.efficiency);
     const windEnergy = calcWindEnergy(p.wind.turbineCapacity, p.wind.numTurbines, p.wind.capacityFactor);
-    const hydroEnergy = calcHydroEnergy(p.hydro.capacity, p.hydro.operatingHours, p.hydro.efficiency);
-    const biomassEnergy = calcBiomassEnergy(p.biomass.input, p.biomass.conversionEfficiency);
+    const hydroEnergy = calcHydroEnergy(
+      p.hydro.capacity,
+      p.hydro.operatingHours,
+      p.hydro.efficiency,
+      p.hydro.headHeight,
+      p.hydro.flowRate
+    );
+    const biomassEnergy = calcBiomassEnergy(
+      p.biomass.input,
+      p.biomass.conversionEfficiency,
+      p.biomass.feedstock || 'agricultural',
+      p.biomass.moisture
+    );
 
     const totalRenewable = solarEnergy + windEnergy + hydroEnergy + biomassEnergy;
     const demand = p.grid.dailyDemand;

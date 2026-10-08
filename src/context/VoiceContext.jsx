@@ -305,7 +305,7 @@ export function VoiceProvider({ children }) {
 
   // Context-aware Ask Copilot
   const askCopilot = useCallback(
-    async ({ prompt, results, params, activeRoute = '/', personaOverride = null }) => {
+    async ({ prompt, results, params, activeRoute = '/', realConditions = null, personaOverride = null }) => {
       const targetPersona = personaOverride || activePersona;
       stopSpeaking();
       setIsThinking(true);
@@ -317,6 +317,7 @@ export function VoiceProvider({ children }) {
           results,
           params,
           activeRoute,
+          realConditions,
           customApiKey: apiKey,
         });
 
@@ -333,24 +334,26 @@ export function VoiceProvider({ children }) {
   );
 
   const speakLiveBriefing = useCallback(
-    (results, params, activeRoute = '/') => {
+    (results, params, activeRoute = '/', realConditions = null) => {
       askCopilot({
-        prompt: 'Deliver a complete, articulate executive situational status report on current renewable performance, battery reserves, and grid health. Provide a full 3-sentence analysis concluding with a clear summary.',
+        prompt: 'Brief Me: Deliver a complete, articulate executive situational status report on current renewable performance, real weather conditions, battery reserves, and grid health. Provide a full analysis concluding with a clear summary.',
         results,
         params,
         activeRoute,
+        realConditions,
       });
     },
     [askCopilot]
   );
 
   const speakAssetReport = useCallback(
-    (assetKey, results, params, activeRoute = '/') => {
+    (assetKey, results, params, activeRoute = '/', realConditions = null) => {
       askCopilot({
-        prompt: `Deliver a complete, detailed technical telemetry inspection report for the ${assetKey} installation in the microgrid in 2 to 3 complete sentences concluding properly.`,
+        prompt: `Deliver a complete, detailed technical telemetry inspection report for the ${assetKey} installation in the microgrid considering current environmental conditions in 2 to 3 complete sentences concluding properly.`,
         results,
         params,
         activeRoute,
+        realConditions,
       });
     },
     [askCopilot]

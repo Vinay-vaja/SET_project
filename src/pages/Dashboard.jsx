@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import { useEnergy } from '../context/EnergyContext.jsx';
 import { useVoice } from '../context/VoiceContext.jsx';
+import { useRealConditions } from '../hooks/useRealConditions.js';
 import KPICard from '../components/KPICard.jsx';
 import EnergyFlowDiagram from '../components/EnergyFlowDiagram.jsx';
 import SDGScoreRing from '../components/SDGScoreRing.jsx';
+import { MapPin, Navigation, RefreshCw, Thermometer, Wind as WindIcon, Sun as SunIcon, Droplet, Cloud, Clock } from 'lucide-react';
 
 const COLORS = {
   solar: '#F59E0B',
@@ -83,6 +85,7 @@ function CustomTooltip({ active, payload, label }) {
 export default function Dashboard() {
   const { liveResults, simResults, params } = useEnergy();
   const { speakLiveBriefing, isSpeaking, stopSpeaking, personaInfo } = useVoice();
+  const realData = useRealConditions();
   const navigate = useNavigate();
   const [chartView, setChartView] = useState('24h');
   const [activeSlice, setActiveSlice] = useState(null);
@@ -104,40 +107,199 @@ export default function Dashboard() {
   const hourlyData = generateHourlyData(results);
   const weekData = generate7DayData(results);
 
+  // Time formatting for real data
+  const formattedUpdateTime = realData.updatedAt
+    ? new Date(realData.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : 'Live';
+
   return (
     <div className="page-wrapper">
-      {/* Header */}
-      <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 className="page-title">GreenPulse Dashboard</h1>
-            <p className="page-subtitle">Monitor your sustainable energy system and its environmental impact.</p>
+      {/* LANDING HERO SHOWCASE */}
+      <div className="landing-hero-section">
+        <div className="landing-hero-bg-img" style={{ backgroundImage: 'url(/hero-landscape.jpg)' }} />
+        <div className="landing-hero-overlay" />
+        <div className="landing-hero-content">
+          <div className="landing-hero-badge">
+            <span className="live-dot" />
+            <span>UN SDG 7 Clean Energy Transition Platform</span>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+
+          <h1 className="landing-hero-title">
+            Next-Generation Renewable Energy &amp; Microgrid Simulation
+          </h1>
+
+          <p className="landing-hero-subtitle">
+            Simulate, optimize, and visualize multi-source renewable microgrids — Solar PV, Wind Aerodynamics, Hydropower, and Biomass Cogeneration — driven by real physical models, 3D digital twins, and AI voice copilots.
+          </p>
+
+          {/* Quick Real-Time Asset Pills in Hero */}
+          <div className="landing-hero-pills-row">
+            <div className="hero-asset-pill" onClick={() => navigate('/simulator')} title="Inspect Solar PV Farm">
+              <Sun size={15} color="#f59e0b" />
+              <span>Solar: <strong>{results.solarEnergy} kWh/day</strong></span>
+            </div>
+            <div className="hero-asset-pill" onClick={() => navigate('/simulator')} title="Inspect Wind Turbine Array">
+              <Wind size={15} color="#06b6d4" />
+              <span>Wind: <strong>{results.windEnergy} kWh/day</strong></span>
+            </div>
+            <div className="hero-asset-pill" onClick={() => navigate('/simulator')} title="Inspect Hydroelectric Powerhouse">
+              <Droplets size={15} color="#0ea5e9" />
+              <span>Hydro: <strong>{results.hydroEnergy} kWh/day</strong></span>
+            </div>
+            <div className="hero-asset-pill" onClick={() => navigate('/simulator')} title="Inspect Biomass CHP Facility">
+              <Leaf size={15} color="#10b981" />
+              <span>Biomass: <strong>{results.biomassEnergy} kWh/day</strong></span>
+            </div>
+          </div>
+
+          {/* Action CTA Buttons */}
+          <div className="landing-hero-actions">
+            <button className="btn btn-primary btn-hero-primary" onClick={() => navigate('/simulator')}>
+              <Zap size={16} /> Launch Energy Simulator <ArrowRight size={15} />
+            </button>
             <button
-              className="btn btn-outline"
+              className="btn btn-hero-voice"
               onClick={() => {
                 if (isSpeaking) stopSpeaking();
                 else speakLiveBriefing(results, params);
               }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                borderColor: `${personaInfo.color}60`,
-                background: '#fff',
-                color: 'var(--gp-gray-800)',
-                fontWeight: 600,
-              }}
-              title={`Listen to live AI Grid Briefing by ${personaInfo.name}`}
+              style={{ borderColor: `${personaInfo.color}80` }}
+              title={`Listen to AI grid debrief by ${personaInfo.name}`}
             >
               {isSpeaking ? <Square size={15} color="#ef4444" /> : <Volume2 size={15} color={personaInfo.color} />}
-              <span>{isSpeaking ? 'Stop Briefing' : `Briefing (${personaInfo.name})`}</span>
+              <span>{isSpeaking ? 'Stop Briefing' : `AI Voice Briefing (${personaInfo.name})`}</span>
             </button>
-            <button className="btn btn-primary" onClick={() => navigate('/simulator')}>
-              <Zap size={16} /> Run New Simulation <ArrowRight size={14} />
+            <button className="btn btn-hero-outline" onClick={() => navigate('/sdg-impact')}>
+              <Target size={15} /> SDG 7 Scorecard
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* COMPACT REAL ENVIRONMENTAL TELEMETRY SECTION */}
+      <div className="real-telemetry-banner">
+        <div className="real-telemetry-header">
+          <div className="real-telemetry-location-info">
+            <MapPin size={18} color="#22c55e" />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+                  {realData.location}, {realData.region}
+                </span>
+                <span className="badge-real">● REAL DATA</span>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Source: {realData.dataSource}</span>
+                <span>•</span>
+                <Clock size={11} />
+                <span>Updated: {formattedUpdateTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ fontSize: '0.72rem', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              onClick={realData.requestUserLocation}
+              disabled={realData.loading}
+              title="Detect your exact location with browser GPS"
+            >
+              <Navigation size={13} color="#22c55e" />
+              <span>{realData.loading ? 'Detecting...' : 'Use My Location'}</span>
+            </button>
+
+            <select
+              className="real-location-dropdown"
+              value={realData.selectedLocationId}
+              onChange={(e) => realData.selectManualLocation(e.target.value)}
+            >
+              {realData.availableLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  📍 {loc.name}, {loc.region.split(',')[0]}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ padding: '6px 8px' }}
+              onClick={realData.refreshRealData}
+              title="Refresh Live Environmental Telemetry"
+            >
+              <RefreshCw size={13} className={realData.loading ? 'spin-slow' : ''} />
+            </button>
+          </div>
+        </div>
+
+        {/* Real Conditions Grid */}
+        <div className="real-telemetry-grid">
+          <div className="real-telemetry-stat">
+            <div className="real-telemetry-stat-label">
+              <span>Temperature</span>
+              <span className="badge-real">REAL</span>
+            </div>
+            <div className="real-telemetry-stat-val" style={{ color: '#f59e0b' }}>
+              {realData.temperature}°C
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Feels like {realData.apparentTemperature}°C</div>
+          </div>
+
+          <div className="real-telemetry-stat">
+            <div className="real-telemetry-stat-label">
+              <span>Wind Speed</span>
+              <span className="badge-real">REAL</span>
+            </div>
+            <div className="real-telemetry-stat-val" style={{ color: '#06b6d4' }}>
+              {realData.windSpeed} m/s
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{realData.windSpeedKmh} km/h • {realData.windDirection}°</div>
+          </div>
+
+          <div className="real-telemetry-stat">
+            <div className="real-telemetry-stat-label">
+              <span>Solar Irradiance</span>
+              <span className="badge-real">REAL</span>
+            </div>
+            <div className="real-telemetry-stat-val" style={{ color: '#fbbf24' }}>
+              {realData.solarIrradiance} W/m²
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Shortwave Direct Flux</div>
+          </div>
+
+          <div className="real-telemetry-stat">
+            <div className="real-telemetry-stat-label">
+              <span>Humidity</span>
+              <span className="badge-real">REAL</span>
+            </div>
+            <div className="real-telemetry-stat-val" style={{ color: '#38bdf8' }}>
+              {realData.humidity}%
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Relative Humidity</div>
+          </div>
+
+          <div className="real-telemetry-stat">
+            <div className="real-telemetry-stat-label">
+              <span>Cloud / Weather</span>
+              <span className="badge-real">REAL</span>
+            </div>
+            <div className="real-telemetry-stat-val" style={{ fontSize: '0.95rem', color: '#e2e8f0' }}>
+              {realData.weatherDesc}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{realData.cloudCover}% cloud cover</div>
+          </div>
+        </div>
+
+        {/* Data Trust Badges Banner */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Data Trust Origins:</span>
+          <span className="badge-real">🟢 REAL (Open-Meteo &amp; GPS)</span>
+          <span className="badge-simulated">🔵 SIMULATED (Physics Engine)</span>
+          <span className="badge-userinput">🟠 USER INPUT (Capacities &amp; Demand)</span>
+          <span className="badge-reference">🟣 REFERENCE (CEA &amp; STC Standards)</span>
         </div>
       </div>
 

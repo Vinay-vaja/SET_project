@@ -6,9 +6,17 @@ import { Sun, Wind, Droplets, Leaf, Battery, Grid3X3, Zap, Home } from 'lucide-r
 
 gsap.registerPlugin(MotionPathPlugin);
 
-function FlowNode({ label, icon: Icon, colorClass, value, unit = 'kWh' }) {
+function FlowNode({ label, icon: Icon, colorClass, value, unit = 'kWh', onClick = null, title = '' }) {
   return (
-    <div className={`flow-node ${colorClass}`}>
+    <div
+      className={`flow-node ${colorClass}`}
+      onClick={onClick}
+      title={title || `Inspect ${label} generation process`}
+      style={{
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.15s, box-shadow 0.15s',
+      }}
+    >
       <Icon size={16} />
       <div>
         <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>{label}</div>
@@ -65,7 +73,7 @@ function FlowArrow({ active, animated = true }) {
   );
 }
 
-export default function EnergyFlowDiagram({ results, compact = false }) {
+export default function EnergyFlowDiagram({ results, compact = false, onSelectSource = null }) {
   if (!results) return null;
 
   const {
@@ -90,10 +98,38 @@ export default function EnergyFlowDiagram({ results, compact = false }) {
       <div style={{ display: 'flex', alignItems: 'stretch', gap: '0.5rem', marginBottom: '0.75rem' }}>
         {/* Source column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 140 }}>
-          <FlowNode label="Solar" icon={Sun} colorClass="flow-node-solar" value={solarEnergy} />
-          <FlowNode label="Wind" icon={Wind} colorClass="flow-node-wind" value={windEnergy} />
-          <FlowNode label="Hydro" icon={Droplets} colorClass="flow-node-hydro" value={hydroEnergy} />
-          <FlowNode label="Biomass" icon={Leaf} colorClass="flow-node-biomass" value={biomassEnergy} />
+          <FlowNode
+            label="Solar"
+            icon={Sun}
+            colorClass="flow-node-solar"
+            value={solarEnergy}
+            onClick={onSelectSource ? () => onSelectSource('solar') : null}
+            title="Inspect Solar PV Conversion Process"
+          />
+          <FlowNode
+            label="Wind"
+            icon={Wind}
+            colorClass="flow-node-wind"
+            value={windEnergy}
+            onClick={onSelectSource ? () => onSelectSource('wind') : null}
+            title="Inspect Wind Aerodynamic Process"
+          />
+          <FlowNode
+            label="Hydro"
+            icon={Droplets}
+            colorClass="flow-node-hydro"
+            value={hydroEnergy}
+            onClick={onSelectSource ? () => onSelectSource('hydro') : null}
+            title="Inspect Hydro Power Station Process"
+          />
+          <FlowNode
+            label="Biomass"
+            icon={Leaf}
+            colorClass="flow-node-biomass"
+            value={biomassEnergy}
+            onClick={onSelectSource ? () => onSelectSource('biomass') : null}
+            title="Inspect Biomass CHP Cogeneration Process"
+          />
         </div>
 
         {/* Arrow column */}

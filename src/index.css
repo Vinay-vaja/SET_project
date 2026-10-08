@@ -1874,26 +1874,27 @@ body {
 }
 
 .persona-tile-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .persona-tile-avatar.mitra-bg {
-  background: rgba(16, 185, 129, 0.25);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.45);
+  background: radial-gradient(circle at 35% 35%, rgba(16, 185, 129, 0.35) 0%, rgba(6, 182, 212, 0.18) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.28);
 }
 
 .persona-tile-avatar.miles-bg {
-  background: rgba(59, 130, 246, 0.25);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.45);
+  background: radial-gradient(circle at 35% 35%, rgba(59, 130, 246, 0.35) 0%, rgba(245, 158, 11, 0.18) 100%);
+  border: 1px solid rgba(96, 165, 250, 0.55);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.28);
 }
 
 .persona-tile-name {
@@ -2186,3 +2187,899 @@ body {
   font-size: 0.65rem;
   color: #94a3b8;
 }
+
+/* ============================================================
+   GENERATION PROCESS SIMULATOR (SOLAR, WIND, HYDRO, BIOMASS)
+   Pristine Eco-Obsidian Theme & Interactive Physics Engine
+   ============================================================ */
+
+.gen-process-viewer-root {
+  background: linear-gradient(145deg, #070b12 0%, #0c121d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  color: #f8fafc;
+}
+
+.gen-process-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.gen-process-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.gen-process-subtitle {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 4px;
+  max-width: 620px;
+  line-height: 1.45;
+}
+
+.gen-source-tabs-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gen-source-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gen-source-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.gen-source-tab-btn.active {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+
+.gen-source-badge-val {
+  font-size: 0.68rem;
+  color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.gen-pipeline-container {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(11, 16, 26, 0.82);
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.gen-pipeline-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.gen-pipeline-rate-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.gen-stages-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px 0;
+}
+
+.gen-stage-card {
+  flex: 1;
+  min-width: 175px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.gen-stage-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.gen-stage-step-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  width: fit-content;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gen-stage-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-top: 2px;
+}
+
+.gen-stage-sub {
+  font-size: 0.66rem;
+  color: #94a3b8;
+}
+
+.gen-stage-metric {
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.gen-stage-detail {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.gen-stage-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  color: #cbd5e1;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gen-stage-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.gen-controls-and-explain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .gen-controls-and-explain-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gen-interactive-panel,
+.gen-explainable-panel {
+  background: rgba(11, 16, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 1.15rem;
+}
+
+.panel-inner-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 0.85rem;
+}
+
+.gen-sliders-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gen-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gen-slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.gen-slider-label strong {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.clean-range-slider {
+  width: 100%;
+  accent-color: #34d399;
+  cursor: pointer;
+  height: 4px;
+}
+
+.wind-status-indicator-box {
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.22);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+
+.wind-status-indicator-box .status-label {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  display: block;
+}
+
+.wind-status-indicator-box .status-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin: 4px 0;
+}
+
+.wind-status-indicator-box .status-pill.active {
+  background: rgba(6, 182, 212, 0.25);
+  color: #38bdf8;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+}
+
+.wind-status-indicator-box .status-pill.rated {
+  background: rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.5);
+}
+
+.wind-status-indicator-box .status-pill.idle {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.wind-status-indicator-box .status-pill.storm {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.wind-status-indicator-box .status-desc {
+  font-size: 0.66rem;
+  color: #94a3b8;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.feedstock-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.feedstock-chip {
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.feedstock-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.feedstock-chip.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+}
+
+.explain-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.explain-p {
+  font-size: 0.73rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.formula-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.formula-label {
+  font-size: 0.64rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.formula-code {
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: #38bdf8;
+  word-break: break-all;
+}
+
+.environmental-impact-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.impact-stat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.impact-stat .stat-num {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.impact-stat .stat-label {
+  font-size: 0.62rem;
+  color: #94a3b8;
+}
+
+/* ============================================================
+   SIMULATION VIEWPORT (PHYSICS PROCESS SIMULATOR CONTAINER)
+   ============================================================ */
+
+.sim-viewport-container {
+  display: flex;
+  flex-direction: column;
+  background: #070b12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.sim-viewport-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.sim-source-tabs-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sim-source-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-source-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sim-source-tab-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+}
+
+.sim-viewmode-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sim-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.sim-mode-btn.active {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.sim-play-pause-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 4px;
+}
+
+.sim-play-pause-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sim-viewport-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background: #070b12;
+}
+
+/* ============================================================
+   LANDING HERO SECTION (CLEAN ENERGY VALLEY CONCEPT)
+   ============================================================ */
+
+.landing-hero-section {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 440px;
+  display: flex;
+  align-items: center;
+}
+
+.landing-hero-bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center 40%;
+  transform: scale(1.02);
+  transition: transform 0.8s ease;
+  z-index: 1;
+}
+
+.landing-hero-section:hover .landing-hero-bg-img {
+  transform: scale(1.05);
+}
+
+.landing-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(7, 11, 18, 0.94) 0%,
+    rgba(7, 11, 18, 0.82) 45%,
+    rgba(7, 11, 18, 0.52) 80%,
+    rgba(7, 11, 18, 0.35) 100%
+  );
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 2;
+}
+
+.landing-hero-content {
+  position: relative;
+  z-index: 3;
+  padding: 2.75rem 2.25rem;
+  max-width: 840px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.landing-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 700;
+  width: fit-content;
+  backdrop-filter: blur(8px);
+}
+
+.landing-hero-title {
+  font-size: 2.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 768px) {
+  .landing-hero-title {
+    font-size: 1.75rem;
+  }
+}
+
+.landing-hero-subtitle {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.55;
+  max-width: 720px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.landing-hero-pills-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hero-asset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 18px;
+  background: rgba(11, 16, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  font-size: 0.76rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-asset-pill:hover {
+  transform: translateY(-2px);
+  background: rgba(11, 16, 26, 0.96);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hero-asset-pill strong {
+  color: #fff;
+}
+
+.landing-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.btn-hero-primary {
+  padding: 0.75rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
+.btn-hero-voice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(11, 16, 26, 0.85);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.btn-hero-voice:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-hero-outline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.btn-hero-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ============================================================
+   DATA TRUST BADGES & REAL DATA TELEMETRY LAYER
+   ============================================================ */
+
+.badge-real {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-simulated {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-userinput {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-reference {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Simulator Mode Toggle: Simulation Mode vs Real Conditions */
+.sim-mode-toggle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0b101a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 16px;
+  margin-bottom: 1.25rem;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sim-mode-toggle-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+.sim-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-toggle-btn.active-sim {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.sim-toggle-btn.active-real {
+  background: rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
+}
+
+/* Compact Real-Data Telemetry Card on Dashboard */
+.real-telemetry-banner {
+  background: linear-gradient(135deg, rgba(13, 27, 46, 0.95) 0%, rgba(6, 11, 20, 0.95) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.08);
+}
+
+.real-telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 12px;
+}
+
+.real-telemetry-location-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.real-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.real-telemetry-stat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.real-telemetry-stat-label {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.real-telemetry-stat-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.real-location-dropdown {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  font-size: 0.74rem;
+  padding: 5px 10px;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+
+

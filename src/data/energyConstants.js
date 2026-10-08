@@ -17,10 +17,14 @@ export const DEFAULT_PARAMS = {
     capacity: 3, // kW
     operatingHours: 8, // hours/day
     efficiency: 80, // %
+    headHeight: 18, // meters (net hydraulic head)
+    flowRate: 0.025, // m^3/s (water flow rate)
   },
   biomass: {
     input: 50, // kg/day
     conversionEfficiency: 25, // %
+    feedstock: 'agricultural', // 'agricultural' | 'wood' | 'organic_waste'
+    moisture: 14, // %
   },
   battery: {
     capacity: 20, // kWh

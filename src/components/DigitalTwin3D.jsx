@@ -208,8 +208,8 @@ export default function DigitalTwin3D({ params, results }) {
 
     // --- SCENE SETUP ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a);
-    scene.fog = new THREE.FogExp2(0x0f172a, 0.012);
+    scene.background = new THREE.Color(0x070b12);
+    scene.fog = new THREE.FogExp2(0x070b12, 0.012);
     sceneStateRef.current.scene = scene;
 
     const camera = new THREE.PerspectiveCamera(
@@ -247,7 +247,7 @@ export default function DigitalTwin3D({ params, results }) {
     // --- ATMOSPHERIC SKY DOME ---
     const skyGeo = new THREE.SphereGeometry(150, 32, 16);
     const skyMat = new THREE.MeshBasicMaterial({
-      color: 0x1e293b,
+      color: 0x0a101d,
       side: THREE.BackSide,
     });
     const skyDome = new THREE.Mesh(skyGeo, skyMat);

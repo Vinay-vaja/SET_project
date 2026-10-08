@@ -10,6 +10,7 @@ import {
   Zap, AlertTriangle, CheckCircle, Lightbulb, Info
 } from 'lucide-react';
 import { calcAuditResults, generateRecommendations, DEFAULT_EQUIPMENT } from '../utils/auditCalculations.js';
+import { useRealConditions } from '../hooks/useRealConditions.js';
 import KPICard from '../components/KPICard.jsx';
 
 const EQUIPMENT_COLORS = [
@@ -48,6 +49,7 @@ export default function EnergyAudit() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEquip, setNewEquip] = useState({ name: '', quantity: 1, powerKW: 0.1, hoursPerDay: 8 });
   const [selectedPreset, setSelectedPreset] = useState('');
+  const realData = useRealConditions();
 
   const audit = useMemo(() => calcAuditResults(equipment, costPerKWh), [equipment, costPerKWh]);
   const recommendations = useMemo(() => generateRecommendations(audit), [audit]);
@@ -87,10 +89,15 @@ export default function EnergyAudit() {
       <div className="page-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 className="page-title">Digital Energy Audit</h1>
-            <p className="page-subtitle">Unit 5 — Identify energy consumption and discover saving opportunities.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <h1 className="page-title" style={{ margin: 0 }}>Digital Energy Audit</h1>
+              <span className="badge-userinput">USER ENTERED DATA</span>
+            </div>
+            <p className="page-subtitle">
+              Identify facility energy consumption patterns, HVAC cooling correlation with live temperature in <strong>{realData.location} ({realData.temperature}°C)</strong>, and uncover data-backed saving opportunities.
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--gp-gray-600)' }}>Cost (₹/kWh):</label>
               <input

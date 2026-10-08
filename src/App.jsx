@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnergyProvider } from './context/EnergyContext.jsx';
 import { VoiceProvider } from './context/VoiceContext.jsx';
+import { RealDataProvider } from './context/RealDataContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import VoiceAssistantWidget from './components/VoiceAssistantWidget.jsx';
 
@@ -52,17 +53,19 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <EnergyProvider>
-        <VoiceProvider>
-          <div className="app-shell full-width-shell">
-            <Navbar />
-            <main className="main-content-full">
-              <AppRoutes />
-            </main>
-            <VoiceAssistantWidget />
-          </div>
-        </VoiceProvider>
-      </EnergyProvider>
+      <RealDataProvider>
+        <EnergyProvider>
+          <VoiceProvider>
+            <div className="app-shell full-width-shell">
+              <Navbar />
+              <main className="main-content-full">
+                <AppRoutes />
+              </main>
+              <VoiceAssistantWidget />
+            </div>
+          </VoiceProvider>
+        </EnergyProvider>
+      </RealDataProvider>
     </BrowserRouter>
   );
 }

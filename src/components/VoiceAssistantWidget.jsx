@@ -7,10 +7,11 @@ import {
   Mic, Volume2, Square, Play, Pause, X,
   Sparkles, Zap, Sun, Wind, Battery, Droplets,
   Radio, Key, Send, Check, Settings2, Sliders,
-  RefreshCw, Bot, ShieldCheck, ChevronDown
+  RefreshCw, Bot, ShieldCheck, ChevronDown, Leaf, Activity
 } from 'lucide-react';
 import { useVoice, PERSONAS } from '../context/VoiceContext.jsx';
 import { useEnergy } from '../context/EnergyContext.jsx';
+import { useRealConditions } from '../hooks/useRealConditions.js';
 
 export default function VoiceAssistantWidget() {
   const location = useLocation();
@@ -43,6 +44,7 @@ export default function VoiceAssistantWidget() {
   } = useVoice();
 
   const { liveResults, simResults, params } = useEnergy();
+  const realData = useRealConditions();
   const results = simResults || liveResults;
 
   const [customPrompt, setCustomPrompt] = useState('');
@@ -455,7 +457,9 @@ export default function VoiceAssistantWidget() {
                     }}
                   >
                     <div className="persona-tile-top">
-                      <div className="persona-tile-avatar mitra-bg">🌱 M</div>
+                      <div className="persona-tile-avatar mitra-bg" title="Mitra — AI Sustainability Advisor">
+                        <Leaf size={19} color="#34d399" />
+                      </div>
                       <div>
                         <div className="persona-tile-name">Mitra</div>
                         <div className="persona-tile-role">AI Sustainability Advisor</div>
@@ -477,7 +481,9 @@ export default function VoiceAssistantWidget() {
                     }}
                   >
                     <div className="persona-tile-top">
-                      <div className="persona-tile-avatar miles-bg">⚡ M</div>
+                      <div className="persona-tile-avatar miles-bg" title="Miles — Grid Operations Dispatcher">
+                        <Activity size={19} color="#60a5fa" />
+                      </div>
                       <div>
                         <div className="persona-tile-name">Miles</div>
                         <div className="persona-tile-role">Grid Operations Dispatcher</div>
@@ -536,11 +542,11 @@ export default function VoiceAssistantWidget() {
                       <button
                         type="button"
                         className="btn-voice-brief-primary"
-                        onClick={() => speakLiveBriefing(results, params, location.pathname)}
+                        onClick={() => speakLiveBriefing(results, params, location.pathname, realData)}
                         style={{ background: personaInfo.avatarGradient }}
                       >
                         <Sparkles size={15} />
-                        <span>Speak Live Grid Briefing</span>
+                        <span>🎙 Brief Me</span>
                       </button>
                     )}
                   </div>
@@ -575,19 +581,33 @@ export default function VoiceAssistantWidget() {
                       <p className="voice-transcript-text">"{currentTranscript}"</p>
                     ) : (
                       <p className="voice-transcript-idle">
-                        Ask a question below or click "Speak Live Grid Briefing" to hear context-aware intelligence narrated in real time...
+                        Ask a question or click "🎙 Brief Me" to hear live situational telemetry narrated for {realData.location}...
                       </p>
                     )}
                   </div>
                 </div>
 
                 {/* INTERACTIVE QUESTION INPUT BAR */}
-                <form onSubmit={handleSendPrompt} className="voice-studio-prompt-form">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!customPrompt.trim() || isThinking) return;
+                    askCopilot({
+                      prompt: customPrompt,
+                      results,
+                      params,
+                      activeRoute: location.pathname,
+                      realConditions: realData,
+                    });
+                    setCustomPrompt('');
+                  }}
+                  className="voice-studio-prompt-form"
+                >
                   <input
                     type="text"
                     value={customPrompt}
                     onChange={(e) => setCustomPrompt(e.target.value)}
-                    placeholder={`Ask ${personaInfo.name} anything (e.g. "How can we reach 100% clean power?")...`}
+                    placeholder={`Ask ${personaInfo.name} anything (e.g. "Explain current conditions in ${realData.location}")...`}
                     className="voice-studio-prompt-input"
                     disabled={isThinking}
                   />
@@ -601,13 +621,15 @@ export default function VoiceAssistantWidget() {
                   </button>
                 </form>
 
-                {/* QUICK PROMPT PILLS */}
+                {/* QUICK PROMPT PILLS (Dynamic Context-Aware Actions) */}
                 <div className="voice-studio-pills-row">
                   {[
-                    { label: '⚡ Eliminate Grid Dependency', q: 'How can we eliminate our fossil grid dependency and reach 100% clean energy?' },
-                    { label: '🔋 Battery Storage Dispatch', q: 'Analyze our BESS Megapack battery reserve and optimize our dispatch schedule.' },
-                    { label: '🌱 SDG 7 Compliance Audit', q: 'What is our current SDG 7 compliance score and carbon abatement status?' },
-                    { label: '💨 Wind & Solar Synergy', q: 'How are the solar panels and wind turbines complementing each other right now?' },
+                    { label: '🎙 Brief Me', q: 'Brief Me: What is happening across our microgrid right now?' },
+                    { label: '🌤 Current Conditions', q: `Explain current weather and solar irradiance conditions in ${realData.location}.` },
+                    { label: '☀️ Solar Generation', q: `Explain our solar generation with current irradiance of ${realData.solarIrradiance} W/m².` },
+                    { label: '💨 Wind Generation', q: `Explain our wind turbine generation under current wind velocity of ${realData.windSpeed} m/s.` },
+                    { label: '🎯 SDG 7 Score', q: 'Explain my SDG 7 score and clean energy impact.' },
+                    { label: '🔋 Battery Storage', q: 'Analyze our BESS Megapack battery reserve and optimize our dispatch schedule.' },
                   ].map(({ label, q }) => (
                     <button
                       key={label}
@@ -619,6 +641,7 @@ export default function VoiceAssistantWidget() {
                           results,
                           params,
                           activeRoute: location.pathname,
+                          realConditions: realData,
                         })
                       }
                     >
