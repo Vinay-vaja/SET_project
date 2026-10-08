@@ -232,19 +232,28 @@ export default function VoiceAssistantWidget() {
 
             <button
               type="button"
-              className="voice-mini-brief-btn"
+              className={`voice-mini-brief-btn ${isSpeaking ? 'active-speaking' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (isSpeaking) {
                   stopSpeaking();
                 } else {
-                  speakLiveBriefing(results, params, location.pathname);
+                  speakLiveBriefing(results, params, location.pathname, realData);
                 }
               }}
               title={isSpeaking ? 'Stop speaking' : `Listen to ${personaInfo.name}'s AI briefing`}
             >
-              {isSpeaking ? <Square size={12} /> : <Zap size={12} />}
-              <span>{isSpeaking ? 'Stop' : 'Brief Me'}</span>
+              {isSpeaking ? (
+                <>
+                  <Square size={10} style={{ fill: 'currentColor' }} />
+                  <span>Stop</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={11} className="mini-brief-icon" />
+                  <span>Brief Me</span>
+                </>
+              )}
             </button>
           </motion.div>
         )}
