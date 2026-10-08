@@ -1,5 +1,6 @@
-// VoiceContext.jsx — Dual AI Voice Synthesis Engine (Mitra & Miles)
+// VoiceContext.jsx — Dual AI Voice Synthesis Engine with Gemini 3.8 Flash & Neural Voice Selection
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { generateGeminiSpeech, sanitizeForSpeech } from '../utils/geminiVoiceService.js';
 
 const VoiceContext = createContext(null);
 
@@ -8,29 +9,33 @@ export const PERSONAS = {
     id: 'mitra',
     name: 'Mitra',
     title: 'AI Sustainability Advisor',
-    role: 'Clean Energy & SDG Specialist',
+    role: 'Clean Energy & SDG 7 Strategist',
     gender: 'female',
-    accent: 'Warm & Articulate',
-    color: '#22c55e',
-    badgeColor: 'rgba(34, 197, 94, 0.15)',
-    avatarGradient: 'linear-gradient(135deg, #22c55e, #10b981, #06b6d4)',
-    pitch: 1.08,
-    rate: 0.98,
-    description: 'Focuses on environmental health, SDG 7 alignment, carbon offset, and clean renewable transition.',
+    accent: 'Warm, Articulate & Natural',
+    color: '#10b981', // Bio-Emerald
+    secondaryColor: '#06b6d4', // Cyan
+    badgeColor: 'rgba(16, 185, 129, 0.16)',
+    glowColor: 'rgba(16, 185, 129, 0.45)',
+    avatarGradient: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #06b6d4 100%)',
+    pitch: 1.02,
+    defaultRate: 1.0,
+    description: 'Empathetic eco-intelligence. Focuses on renewable energy ratio, carbon offset, and sustainable transition.',
   },
   miles: {
     id: 'miles',
     name: 'Miles',
     title: 'Grid Operations Dispatcher',
-    role: 'Electrical & Telemetry Controller',
+    role: 'Telemetry & Electrical Dispatcher',
     gender: 'male',
-    accent: 'Authoritative & Technical',
-    color: '#3b82f6',
-    badgeColor: 'rgba(59, 130, 246, 0.15)',
-    avatarGradient: 'linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6)',
-    pitch: 0.90,
-    rate: 1.04,
-    description: 'Focuses on real-time megawatts, battery SoC, grid stability, frequency regulation, and turbine RPM.',
+    accent: 'Crisp, Technical & Authoritative',
+    color: '#3b82f6', // Electric Cobalt
+    secondaryColor: '#f59e0b', // Solar Amber
+    badgeColor: 'rgba(59, 130, 246, 0.16)',
+    glowColor: 'rgba(59, 130, 246, 0.45)',
+    avatarGradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #f59e0b 100%)',
+    pitch: 0.95,
+    defaultRate: 1.02,
+    description: 'Technical dispatch commander. Focuses on generation megawatts, battery SoC buffer, and grid stability.',
   },
 };
 
@@ -38,14 +43,40 @@ export function VoiceProvider({ children }) {
   const [activePersona, setActivePersona] = useState('mitra');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [availableVoices, setAvailableVoices] = useState([]);
-  const [audioLevel, setAudioLevel] = useState(0); // For dynamic visualizer
+  const [selectedVoiceUri, setSelectedVoiceUri] = useState('');
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [apiKey, setApiKeyState] = useState(() => {
+    return (
+      (typeof window !== 'undefined' ? localStorage.getItem('gp_gemini_api_key') : '') ||
+      import.meta.env.VITE_GEMINI_API_KEY ||
+      import.meta.env.GEMIN_API_KEY ||
+      import.meta.env.GEMINI_API_KEY ||
+      ''
+    );
+  });
+
   const synthRef = useRef(null);
   const animFrameRef = useRef(null);
+  const sentenceQueueRef = useRef([]);
+  const activeUtteranceRef = useRef(null);
 
-  // Initialize SpeechSynthesis and fetch voices
+  const setApiKey = useCallback((key) => {
+    setApiKeyState(key);
+    if (typeof window !== 'undefined') {
+      if (key) {
+        localStorage.setItem('gp_gemini_api_key', key);
+      } else {
+        localStorage.removeItem('gp_gemini_api_key');
+      }
+    }
+  }, []);
+
+  // Fetch installed voices
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
@@ -71,12 +102,11 @@ export function VoiceProvider({ children }) {
     };
   }, []);
 
-  // Visualizer animation ticker when speaking
+  // Visualizer level oscillator
   useEffect(() => {
     if (isSpeaking && !isPaused) {
       const animateWave = () => {
-        // Simulated sound levels for voice equalizer
-        setAudioLevel(0.3 + Math.random() * 0.7);
+        setAudioLevel(0.4 + Math.random() * 0.6);
         animFrameRef.current = requestAnimationFrame(animateWave);
       };
       animFrameRef.current = requestAnimationFrame(animateWave);
@@ -89,95 +119,176 @@ export function VoiceProvider({ children }) {
     };
   }, [isSpeaking, isPaused]);
 
-  // Pick best voice for persona
-  const getBestVoiceForPersona = useCallback((personaKey) => {
-    if (!availableVoices.length) return null;
-    const persona = PERSONAS[personaKey] || PERSONAS.mitra;
+  // High-clarity natural voice picker
+  const getBestVoiceForPersona = useCallback(
+    (personaKey) => {
+      if (!availableVoices.length) return null;
 
-    if (persona.gender === 'female') {
-      // Find female or natural voice
-      const preferred = availableVoices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.toLowerCase().includes('female') ||
-            v.name.toLowerCase().includes('zira') ||
-            v.name.toLowerCase().includes('samantha') ||
-            v.name.toLowerCase().includes('karen') ||
-            v.name.toLowerCase().includes('natural') ||
-            v.name.toLowerCase().includes('india') ||
-            v.name.toLowerCase().includes('heera'))
-      );
-      if (preferred) return preferred;
-    } else {
-      // Find male voice
-      const preferred = availableVoices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.toLowerCase().includes('david') ||
-            v.name.toLowerCase().includes('george') ||
-            v.name.toLowerCase().includes('male') ||
-            v.name.toLowerCase().includes('alex') ||
-            v.name.toLowerCase().includes('daniel') ||
-            v.name.toLowerCase().includes('guy') ||
-            v.name.toLowerCase().includes('ravi'))
-      );
-      if (preferred) return preferred;
-    }
+      // If user manually chose a voice, respect it
+      if (selectedVoiceUri) {
+        const matched = availableVoices.find((v) => v.voiceURI === selectedVoiceUri);
+        if (matched) return matched;
+      }
 
-    // Fallback to any English voice or first voice
-    const englishVoice = availableVoices.find((v) => v.lang.startsWith('en'));
-    return englishVoice || availableVoices[0] || null;
-  }, [availableVoices]);
+      const persona = PERSONAS[personaKey] || PERSONAS.mitra;
 
-  // Main Speak function
-  const speak = useCallback((text, personaOverride = null) => {
-    if (!synthRef.current || !text) return;
+      if (persona.gender === 'female') {
+        // Priority 1: Natural / Online high clarity female voices (e.g. Edge Natural / Neural)
+        const naturalFemale = availableVoices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            v.name.toLowerCase().includes('natural') &&
+            (v.name.toLowerCase().includes('female') ||
+              v.name.toLowerCase().includes('jenny') ||
+              v.name.toLowerCase().includes('sonia') ||
+              v.name.toLowerCase().includes('aria'))
+        );
+        if (naturalFemale) return naturalFemale;
 
-    synthRef.current.cancel(); // Stop any ongoing speech
+        // Priority 2: Google UK / US Female, Apple Samantha, Microsoft Zira
+        const qualityFemale = availableVoices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.toLowerCase().includes('google uk english female') ||
+              v.name.toLowerCase().includes('zira') ||
+              v.name.toLowerCase().includes('samantha') ||
+              v.name.toLowerCase().includes('karen') ||
+              v.name.toLowerCase().includes('heera') ||
+              v.name.toLowerCase().includes('victoria'))
+        );
+        if (qualityFemale) return qualityFemale;
 
-    const personaKey = personaOverride || activePersona;
-    const persona = PERSONAS[personaKey];
-    const utterance = new SpeechSynthesisUtterance(text);
+        // Priority 3: Any female English voice
+        const anyFemale = availableVoices.find(
+          (v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
+        );
+        if (anyFemale) return anyFemale;
+      } else {
+        // Priority 1: Natural / Online high clarity male voices
+        const naturalMale = availableVoices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            v.name.toLowerCase().includes('natural') &&
+            (v.name.toLowerCase().includes('male') ||
+              v.name.toLowerCase().includes('guy') ||
+              v.name.toLowerCase().includes('christopher') ||
+              v.name.toLowerCase().includes('ryan'))
+        );
+        if (naturalMale) return naturalMale;
 
-    const voice = getBestVoiceForPersona(personaKey);
-    if (voice) {
-      utterance.voice = voice;
-    }
+        // Priority 2: Google US English, Microsoft David, Alex, Daniel
+        const qualityMale = availableVoices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.toLowerCase().includes('david') ||
+              v.name.toLowerCase().includes('george') ||
+              v.name.toLowerCase().includes('google us english') ||
+              v.name.toLowerCase().includes('alex') ||
+              v.name.toLowerCase().includes('daniel') ||
+              v.name.toLowerCase().includes('ravi'))
+        );
+        if (qualityMale) return qualityMale;
 
-    utterance.pitch = persona.pitch;
-    utterance.rate = persona.rate;
-    utterance.volume = 1.0;
+        // Priority 3: Any male English voice
+        const anyMale = availableVoices.find(
+          (v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')
+        );
+        if (anyMale) return anyMale;
+      }
 
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setIsPaused(false);
-      setCurrentTranscript(text);
-    };
+      // Default fallback English voice
+      const englishVoice = availableVoices.find((v) => v.lang.startsWith('en'));
+      return englishVoice || availableVoices[0] || null;
+    },
+    [availableVoices, selectedVoiceUri]
+  );
 
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis notice:', e);
-      setIsSpeaking(false);
-      setIsPaused(false);
-    };
-
-    synthRef.current.speak(utterance);
-  }, [activePersona, getBestVoiceForPersona]);
-
-  // Stop speaking
+  // Clear queued sentences and stop
   const stopSpeaking = useCallback(() => {
+    sentenceQueueRef.current = [];
     if (synthRef.current) {
       synthRef.current.cancel();
       setIsSpeaking(false);
       setIsPaused(false);
+      setIsThinking(false);
     }
   }, []);
 
-  // Pause / Resume
+  // Speak sentence queue sequentially for human-like pacing
+  const speakQueue = useCallback((sentences, personaKey) => {
+    if (!synthRef.current || !sentences.length) {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+    setIsPaused(false);
+
+    const sentence = sentences.shift();
+    const persona = PERSONAS[personaKey];
+    const voice = getBestVoiceForPersona(personaKey);
+
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    if (voice) {
+      utterance.voice = voice;
+    }
+    utterance.pitch = persona.pitch;
+    utterance.rate = speechRate;
+    utterance.volume = 1.0;
+
+    activeUtteranceRef.current = utterance;
+
+    utterance.onend = () => {
+      if (sentences.length > 0) {
+        // Natural micro-pause between sentences
+        setTimeout(() => {
+          speakQueue(sentences, personaKey);
+        }, 120);
+      } else {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      }
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Utterance notice:', e);
+      if (sentences.length > 0) {
+        speakQueue(sentences, personaKey);
+      } else {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      }
+    };
+
+    synthRef.current.speak(utterance);
+  }, [getBestVoiceForPersona, speechRate]);
+
+  // Main Speak function with automatic sentence chunking
+  const speak = useCallback(
+    (text, personaOverride = null) => {
+      if (!synthRef.current || !text) return;
+
+      synthRef.current.cancel(); // Stop ongoing speech
+
+      const cleanText = sanitizeForSpeech(text);
+      if (!cleanText) return;
+
+      const personaKey = personaOverride || activePersona;
+      setCurrentTranscript(cleanText);
+
+      // Split into sentences for clear, crisp pronunciation without browser audio clipping
+      const sentences = cleanText
+        .split(/(?<=[.!?])\s+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      sentenceQueueRef.current = sentences;
+      speakQueue(sentences, personaKey);
+    },
+    [activePersona, speakQueue]
+  );
+
   const pauseSpeaking = useCallback(() => {
     if (synthRef.current && isSpeaking) {
       synthRef.current.pause();
@@ -192,56 +303,58 @@ export function VoiceProvider({ children }) {
     }
   }, [isPaused]);
 
-  // High-Level Speech Presets
-  const speakLiveBriefing = useCallback((results, params) => {
-    if (!results) return;
+  // Context-aware Ask Copilot
+  const askCopilot = useCallback(
+    async ({ prompt, results, params, activeRoute = '/', personaOverride = null }) => {
+      const targetPersona = personaOverride || activePersona;
+      stopSpeaking();
+      setIsThinking(true);
 
-    if (activePersona === 'mitra') {
-      const script = `Hello operator, I am Mitra, your AI Sustainability Advisor. Here is your live environmental report. Clean renewable energy is providing ${results.renewableSharePct} percent of your system power. Your facility has avoided ${Math.round(results.co2AvoidedKg)} kilograms of carbon dioxide emissions today, saving an estimated ₹${Math.round(results.dailyCostSaving)} rupees in power costs. Your SDG 7 clean energy compliance score is rated at ${Math.round(results.sdgScores?.sdg7?.total || 75)} out of 100. Environmental metrics are performing cleanly.`;
-      speak(script);
-    } else {
-      const script = `Dispatcher Miles online. Grid telemetry verified. Total active power generation is holding at ${results.totalGeneration} kilowatt-hours against a consumer load demand of ${results.totalDemandKWh} kilowatt-hours. Grid dependency index is ${results.gridDependencyPct} percent, with battery storage reserves at ${Math.round(results.batterySoC)} percent State of Charge. Substation bus voltages and renewable dispatch are synchronized.`;
-      speak(script);
-    }
-  }, [activePersona, speak]);
+      try {
+        const response = await generateGeminiSpeech({
+          prompt,
+          persona: targetPersona,
+          results,
+          params,
+          activeRoute,
+          customApiKey: apiKey,
+        });
 
-  const speakAssetReport = useCallback((assetKey, results, params) => {
-    if (activePersona === 'mitra') {
-      switch (assetKey) {
-        case 'solar':
-          speak(`Solar Photovoltaic array active. The monocrystalline silicon modules are converting sunlight into ${results?.solarEnergy || 0} kilowatt-hours of clean solar power, eliminating peak fossil fuel demand.`);
-          break;
-        case 'wind':
-          speak(`Wind Farm inspected. Aerodynamic rotor blades are harnessing atmospheric kinetic currents, yielding ${results?.windEnergy || 0} kilowatt-hours of zero-carbon electricity.`);
-          break;
-        case 'battery':
-          speak(`Megapack Battery Energy Storage online. Battery reserves are currently at ${Math.round(results?.batterySoC || 60)} percent State of Charge, buffering renewable intermittency for continuous 24/7 clean supply.`);
-          break;
-        case 'hydro':
-          speak(`Hydropower and Biomass units reporting. Providing reliable baseline green energy and circular organic waste valorization for balanced ecosystem health.`);
-          break;
-        default:
-          speak(`Sustainable Energy Transition facility operating in balanced hybrid mode with ${results?.renewableSharePct || 0} percent renewable penetration.`);
+        setIsThinking(false);
+        if (response?.text) {
+          speak(response.text, targetPersona);
+        }
+      } catch (err) {
+        console.warn('Voice AI Generation error:', err);
+        setIsThinking(false);
       }
-    } else {
-      switch (assetKey) {
-        case 'solar':
-          speak(`Solar Array telemetry: ${params?.solar?.capacity || 25} kilowatt peak capacity connected via central three-phase inverter station. Real-time generation stands at ${results?.solarEnergy || 0} kilowatt-hours.`);
-          break;
-        case 'wind':
-          speak(`Wind Sector report: ${params?.wind?.numTurbines || 3} utility-scale wind turbines operational. Local wind velocity measured at ${params?.wind?.windSpeed || 8} meters per second. Rotor rotation synchronized to grid bus.`);
-          break;
-        case 'battery':
-          speak(`BESS Megapack Hub: Containerized lithium storage standing by at ${Math.round(results?.batterySoC || 60)} percent State of Charge. Bi-directional inverter is active for peak shaving and grid frequency regulation.`);
-          break;
-        case 'hydro':
-          speak(`Hydro and Biomass auxiliary baseline units: Delivering continuous baseline generation with ${results?.hydroEnergy || 0} kilowatt-hours hydroelectric yield.`);
-          break;
-        default:
-          speak(`System overview: Hybrid renewable microgrid generation totaling ${results?.totalGeneration || 0} kilowatt-hours against ${results?.totalDemandKWh || 0} kilowatt-hours demand.`);
-      }
-    }
-  }, [activePersona, speak]);
+    },
+    [activePersona, apiKey, speak, stopSpeaking]
+  );
+
+  const speakLiveBriefing = useCallback(
+    (results, params, activeRoute = '/') => {
+      askCopilot({
+        prompt: 'Deliver an executive live situational status report on current renewable performance and grid health.',
+        results,
+        params,
+        activeRoute,
+      });
+    },
+    [askCopilot]
+  );
+
+  const speakAssetReport = useCallback(
+    (assetKey, results, params, activeRoute = '/') => {
+      askCopilot({
+        prompt: `Inspect the ${assetKey} installation in the microgrid and deliver technical telemetry insights.`,
+        results,
+        params,
+        activeRoute,
+      });
+    },
+    [askCopilot]
+  );
 
   const value = {
     activePersona,
@@ -249,15 +362,24 @@ export function VoiceProvider({ children }) {
     personaInfo: PERSONAS[activePersona],
     isSpeaking,
     isPaused,
+    isThinking,
     audioLevel,
     currentTranscript,
     isWidgetOpen,
     setIsWidgetOpen,
     toggleWidget: () => setIsWidgetOpen((prev) => !prev),
+    apiKey,
+    setApiKey,
+    availableVoices,
+    selectedVoiceUri,
+    setSelectedVoiceUri,
+    speechRate,
+    setSpeechRate,
     speak,
     stopSpeaking,
     pauseSpeaking,
     resumeSpeaking,
+    askCopilot,
     speakLiveBriefing,
     speakAssetReport,
     isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
