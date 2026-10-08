@@ -2,7 +2,9 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnergyProvider } from './context/EnergyContext.jsx';
+import { VoiceProvider } from './context/VoiceContext.jsx';
 import Navbar from './components/Navbar.jsx';
+import VoiceAssistantWidget from './components/VoiceAssistantWidget.jsx';
 
 // Pages
 import Dashboard from './pages/Dashboard.jsx';
@@ -51,12 +53,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <EnergyProvider>
-        <div className="app-shell full-width-shell">
-          <Navbar />
-          <main className="main-content-full">
-            <AppRoutes />
-          </main>
-        </div>
+        <VoiceProvider>
+          <div className="app-shell full-width-shell">
+            <Navbar />
+            <main className="main-content-full">
+              <AppRoutes />
+            </main>
+            <VoiceAssistantWidget />
+          </div>
+        </VoiceProvider>
       </EnergyProvider>
     </BrowserRouter>
   );

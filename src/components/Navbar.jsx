@@ -4,8 +4,9 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Zap, Cpu, Trash2, ClipboardCheck,
-  GitCompare, Info, Menu, X
+  GitCompare, Info, Menu, X, Volume2, Mic
 } from 'lucide-react';
+import { useVoice } from '../context/VoiceContext.jsx';
 
 export const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -20,6 +21,7 @@ export const NAV_ITEMS = [
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { toggleWidget, activePersona, personaInfo, isSpeaking } = useVoice();
 
   return (
     <header className="top-navbar-root">
@@ -55,6 +57,23 @@ export default function Navbar() {
 
         {/* RIGHT TELEMETRY & ACTIONS */}
         <div className="navbar-right-section">
+          {/* AI Voice Assistant Trigger */}
+          <button
+            type="button"
+            className="navbar-voice-trigger-btn"
+            onClick={toggleWidget}
+            title={`AI Voice Copilot: ${personaInfo.name} (${personaInfo.title}) — Click to Open`}
+          >
+            <span
+              className="navbar-voice-pulse"
+              style={{ backgroundColor: personaInfo.color }}
+            />
+            {isSpeaking ? <Volume2 size={14} color={personaInfo.color} /> : <Mic size={14} color={personaInfo.color} />}
+            <span className="navbar-voice-text" style={{ color: 'var(--gp-gray-800)' }}>
+              Voice: <strong>{personaInfo.name}</strong>
+            </span>
+          </button>
+
           {/* Live Simulator Status */}
           <div className="live-status-pill" title="Real-time simulation engine active">
             <span className="live-pulsing-dot" />

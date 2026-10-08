@@ -8,9 +8,10 @@ import {
 } from 'recharts';
 import {
   Zap, Wind, Droplets, Leaf, Sun, Battery, TrendingUp,
-  ArrowRight, CloudOff, DollarSign, Activity, Target
+  ArrowRight, CloudOff, DollarSign, Activity, Target, Volume2, Square
 } from 'lucide-react';
 import { useEnergy } from '../context/EnergyContext.jsx';
+import { useVoice } from '../context/VoiceContext.jsx';
 import KPICard from '../components/KPICard.jsx';
 import EnergyFlowDiagram from '../components/EnergyFlowDiagram.jsx';
 import SDGScoreRing from '../components/SDGScoreRing.jsx';
@@ -81,6 +82,7 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function Dashboard() {
   const { liveResults, simResults, params } = useEnergy();
+  const { speakLiveBriefing, isSpeaking, stopSpeaking, personaInfo } = useVoice();
   const navigate = useNavigate();
   const [chartView, setChartView] = useState('24h');
   const [activeSlice, setActiveSlice] = useState(null);
@@ -111,9 +113,31 @@ export default function Dashboard() {
             <h1 className="page-title">GreenPulse Dashboard</h1>
             <p className="page-subtitle">Monitor your sustainable energy system and its environmental impact.</p>
           </div>
-          <button className="btn btn-primary" onClick={() => navigate('/simulator')}>
-            <Zap size={16} /> Run New Simulation <ArrowRight size={14} />
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-outline"
+              onClick={() => {
+                if (isSpeaking) stopSpeaking();
+                else speakLiveBriefing(results, params);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                borderColor: `${personaInfo.color}60`,
+                background: '#fff',
+                color: 'var(--gp-gray-800)',
+                fontWeight: 600,
+              }}
+              title={`Listen to live AI Grid Briefing by ${personaInfo.name}`}
+            >
+              {isSpeaking ? <Square size={15} color="#ef4444" /> : <Volume2 size={15} color={personaInfo.color} />}
+              <span>{isSpeaking ? 'Stop Briefing' : `Briefing (${personaInfo.name})`}</span>
+            </button>
+            <button className="btn btn-primary" onClick={() => navigate('/simulator')}>
+              <Zap size={16} /> Run New Simulation <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
       </div>
 

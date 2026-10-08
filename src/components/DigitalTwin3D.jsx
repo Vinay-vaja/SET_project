@@ -5,8 +5,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   Sun, Wind, Droplets, Battery, Maximize2, Minimize2,
-  Play, Pause, RotateCcw, Layers, Sparkles
+  Play, Pause, RotateCcw, Layers, Sparkles, Volume2, VolumeX, Mic
 } from 'lucide-react';
+import { useVoice } from '../context/VoiceContext.jsx';
 
 export default function DigitalTwin3D({ params, results }) {
   const mountRef = useRef(null);
@@ -15,6 +16,9 @@ export default function DigitalTwin3D({ params, results }) {
   const [activePreset, setActivePreset] = useState('overview');
   const [timeOfDay, setTimeOfDay] = useState('day'); // 'day', 'sunset', 'night'
   const [isPlaying, setIsPlaying] = useState(true);
+  const [voiceGuide, setVoiceGuide] = useState(false);
+
+  const { speakAssetReport, personaInfo, isSpeaking, stopSpeaking } = useVoice();
 
   // Proper HTML5 Fullscreen toggle with fallback
   const toggleFullscreen = () => {
@@ -143,8 +147,11 @@ export default function DigitalTwin3D({ params, results }) {
   }, [timeOfDay]);
 
   // Camera presets
-  const applyCameraPreset = (preset) => {
+  const applyCameraPreset = (preset, forceVoice = false) => {
     setActivePreset(preset);
+    if (voiceGuide || forceVoice) {
+      speakAssetReport(preset, results, params);
+    }
     const camera = sceneStateRef.current.camera;
     const controls = sceneStateRef.current.controls;
     if (!camera || !controls) return;
@@ -925,6 +932,39 @@ export default function DigitalTwin3D({ params, results }) {
               </button>
             ))}
           </div>
+
+          {/* Voice Guide Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !voiceGuide;
+              setVoiceGuide(nextState);
+              if (nextState) {
+                speakAssetReport(activePreset, results, params);
+              } else {
+                stopSpeaking();
+              }
+            }}
+            style={{
+              background: voiceGuide ? `${personaInfo.color}35` : 'rgba(15, 23, 42, 0.85)',
+              border: voiceGuide ? `1px solid ${personaInfo.color}` : '1px solid rgba(255, 255, 255, 0.15)',
+              color: voiceGuide ? personaInfo.color : '#cbd5e1',
+              borderRadius: 20,
+              padding: '6px 12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: '0.73rem',
+              fontWeight: 600,
+              boxShadow: voiceGuide ? `0 0 12px ${personaInfo.color}40` : 'none',
+              transition: 'all 0.2s ease',
+            }}
+            title={`Toggle 3D Audio Guide narrated by ${personaInfo.name}`}
+          >
+            {voiceGuide ? <Volume2 size={13} /> : <VolumeX size={13} />}
+            <span>Voice Guide: {personaInfo.name}</span>
+          </button>
 
           {/* Play / Pause */}
           <button
