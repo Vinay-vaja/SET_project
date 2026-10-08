@@ -335,7 +335,7 @@ export function VoiceProvider({ children }) {
   const speakLiveBriefing = useCallback(
     (results, params, activeRoute = '/') => {
       askCopilot({
-        prompt: 'Deliver an executive live situational status report on current renewable performance and grid health.',
+        prompt: 'Deliver a complete, articulate executive situational status report on current renewable performance, battery reserves, and grid health. Provide a full 3-sentence analysis concluding with a clear summary.',
         results,
         params,
         activeRoute,
@@ -347,7 +347,7 @@ export function VoiceProvider({ children }) {
   const speakAssetReport = useCallback(
     (assetKey, results, params, activeRoute = '/') => {
       askCopilot({
-        prompt: `Inspect the ${assetKey} installation in the microgrid and deliver technical telemetry insights.`,
+        prompt: `Deliver a complete, detailed technical telemetry inspection report for the ${assetKey} installation in the microgrid in 2 to 3 complete sentences concluding properly.`,
         results,
         params,
         activeRoute,
