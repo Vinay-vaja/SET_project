@@ -1,5 +1,4 @@
-// VoiceAssistantWidget.jsx — Holographic AI Voice Command Center (Mitra & Miles)
-// Inspired by sci-fi neural audio visualizer with flowing waveforms, circuit matrix, and scrollable studio
+// VoiceAssistantWidget.jsx — Realistic Conversational Voice AI (Mitra & Miles)
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +6,8 @@ import {
   Mic, Volume2, Square, Play, Pause, X,
   Sparkles, Zap, Sun, Wind, Battery, Droplets,
   Radio, Key, Send, Check, Settings2, Sliders,
-  RefreshCw, Bot, ShieldCheck, ChevronDown, Leaf, Activity
+  RefreshCw, Bot, ShieldCheck, ChevronDown, Leaf, Activity,
+  Keyboard, MessageSquare, VolumeX, User
 } from 'lucide-react';
 import { useVoice, PERSONAS } from '../context/VoiceContext.jsx';
 import { useEnergy } from '../context/EnergyContext.jsx';
@@ -47,15 +47,129 @@ export default function VoiceAssistantWidget() {
   const realData = useRealConditions();
   const results = simResults || liveResults;
 
+  const [isListening, setIsListening] = useState(false);
+  const [showTextInput, setShowTextInput] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [tempKey, setTempKey] = useState(apiKey || '');
   const [keySavedToast, setKeySavedToast] = useState(false);
 
-  // Canvas visualizer for flowing holographic ribbons & binary particle matrix
+  // Chat conversation history for realistic conversational UI
+  const [conversation, setConversation] = useState([
+    {
+      id: 'init-1',
+      sender: 'mitra',
+      time: 'Live',
+      text: `Hello! I'm Mitra, your AI Sustainability Advisor. I'm monitoring real-time conditions in ${realData.location || 'your area'} (${realData.temperature || 31.4}°C, ${realData.solarIrradiance || 742} W/m²). How can I assist your clean energy goals today?`,
+    },
+  ]);
+
   const canvasRef = useRef(null);
   const animRef = useRef(null);
+  const recognitionRef = useRef(null);
 
+  // Speech Recognition (Browser Web Speech API)
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        setIsListening(false);
+        if (speechToText) {
+          handleUserQuery(speechToText);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition notice:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, [results, params, realData]);
+
+  const toggleListening = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          console.warn('Recognition start issue:', e);
+          setIsListening(true);
+        }
+      } else {
+        // Fallback demo question if microphone API is blocked in browser
+        handleUserQuery(`What is the current solar condition in ${realData.location || 'my location'}?`);
+      }
+    }
+  };
+
+  const handleUserQuery = async (queryText) => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      time: now,
+      text: queryText,
+    };
+
+    setConversation((prev) => [...prev, userMsg]);
+
+    // Query AI Copilot
+    await askCopilot({
+      prompt: queryText,
+      results,
+      params,
+      activeRoute: location.pathname,
+      realConditions: realData,
+    });
+  };
+
+  // Append new AI spoken responses to conversation thread
+  useEffect(() => {
+    if (currentTranscript && !isThinking) {
+      setConversation((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.sender === activePersona && last.text === currentTranscript) {
+          return prev;
+        }
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return [
+          ...prev,
+          {
+            id: `ai-${Date.now()}`,
+            sender: activePersona,
+            time: now,
+            text: currentTranscript,
+          },
+        ];
+      });
+    }
+  }, [currentTranscript, isThinking, activePersona]);
+
+  // Flowing audio wave visualization
   useEffect(() => {
     if (!isWidgetOpen) return;
     const canvas = canvasRef.current;
@@ -63,74 +177,46 @@ export default function VoiceAssistantWidget() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = (canvas.width = canvas.offsetWidth || 560);
-    let height = (canvas.height = canvas.offsetHeight || 190);
+    let width = (canvas.width = canvas.offsetWidth || 480);
+    let height = (canvas.height = canvas.offsetHeight || 160);
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth || 560;
-      height = canvas.height = canvas.offsetHeight || 190;
+      width = canvas.width = canvas.offsetWidth || 480;
+      height = canvas.height = canvas.offsetHeight || 160;
     };
     window.addEventListener('resize', handleResize);
-
-    // Particle nodes for digital circuit matrix
-    const particles = Array.from({ length: 26 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.4,
-      size: Math.random() * 2 + 1,
-      char: Math.random() > 0.5 ? '1' : '0',
-      alpha: Math.random() * 0.6 + 0.2,
-    }));
 
     let phase = 0;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      phase += isSpeaking ? 0.05 : isThinking ? 0.08 : 0.02;
-      const currentLevel = isSpeaking ? audioLevel : isThinking ? 0.6 : 0.18;
+      phase += isSpeaking ? 0.06 : isListening ? 0.08 : isThinking ? 0.1 : 0.02;
+      const currentLevel = isSpeaking ? audioLevel : isListening ? 0.75 : isThinking ? 0.5 : 0.15;
 
-      // 1. Draw glowing circuit particles & binary characters
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-
-        ctx.fillStyle = activePersona === 'mitra'
-          ? `rgba(16, 185, 129, ${p.alpha * 0.5})`
-          : `rgba(59, 130, 246, ${p.alpha * 0.5})`;
-        ctx.font = '9px monospace';
-        ctx.fillText(p.char, p.x, p.y);
-      });
-
-      // 2. Draw Holographic Waveform Ribbons (Cyan / Amber)
-      const centerY = height * 0.58;
+      const centerY = height * 0.5;
       const ribbons = [
         {
-          color: activePersona === 'mitra' ? 'rgba(6, 182, 212, 0.7)' : 'rgba(59, 130, 246, 0.75)',
-          freq: 0.018,
-          amp: 16 + currentLevel * 30,
+          color: 'rgba(52, 211, 153, 0.85)',
+          freq: 0.022,
+          amp: 12 + currentLevel * 32,
           speed: 1.0,
-          lineWidth: 2.5,
+          lineWidth: 2.2,
         },
         {
-          color: activePersona === 'mitra' ? 'rgba(16, 185, 129, 0.85)' : 'rgba(245, 158, 11, 0.85)',
-          freq: 0.025,
-          amp: 20 + currentLevel * 38,
+          color: 'rgba(6, 182, 212, 0.75)',
+          freq: 0.03,
+          amp: 16 + currentLevel * 36,
           speed: -0.8,
-          lineWidth: 3,
+          lineWidth: 2.0,
         },
         {
-          color: 'rgba(255, 255, 255, 0.35)',
-          freq: 0.035,
-          amp: 10 + currentLevel * 18,
+          color: 'rgba(255, 255, 255, 0.3)',
+          freq: 0.04,
+          amp: 8 + currentLevel * 18,
           speed: 1.4,
-          lineWidth: 1.5,
+          lineWidth: 1.2,
         },
       ];
 
@@ -139,16 +225,16 @@ export default function VoiceAssistantWidget() {
         ctx.strokeStyle = r.color;
         ctx.lineWidth = r.lineWidth;
         ctx.shadowColor = r.color;
-        ctx.shadowBlur = isSpeaking ? 16 : 8;
+        ctx.shadowBlur = isSpeaking || isListening ? 14 : 4;
 
         for (let x = 0; x <= width; x += 4) {
-          const envelope = Math.sin((x / width) * Math.PI); // Pinched at borders
+          const envelope = Math.sin((x / width) * Math.PI);
           const y =
             centerY +
             Math.sin(x * r.freq + phase * r.speed) *
               r.amp *
               envelope *
-              (1 + Math.sin(x * 0.01 + phase) * 0.3);
+              (1 + Math.sin(x * 0.012 + phase) * 0.35);
 
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
@@ -156,9 +242,7 @@ export default function VoiceAssistantWidget() {
         ctx.stroke();
       });
 
-      // Reset shadow blur
       ctx.shadowBlur = 0;
-
       animRef.current = requestAnimationFrame(render);
     };
 
@@ -168,19 +252,7 @@ export default function VoiceAssistantWidget() {
       window.removeEventListener('resize', handleResize);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [isWidgetOpen, isSpeaking, isThinking, audioLevel, activePersona]);
-
-  const handleSendPrompt = (e) => {
-    e?.preventDefault();
-    if (!customPrompt.trim()) return;
-    askCopilot({
-      prompt: customPrompt,
-      results,
-      params,
-      activeRoute: location.pathname,
-    });
-    setCustomPrompt('');
-  };
+  }, [isWidgetOpen, isSpeaking, isListening, isThinking, audioLevel]);
 
   const handleSaveKey = () => {
     setApiKey(tempKey.trim());
@@ -190,6 +262,15 @@ export default function VoiceAssistantWidget() {
       setShowSettings(false);
     }, 1200);
   };
+
+  // Determine current active state
+  const currentState = isListening
+    ? 'listening'
+    : isThinking
+    ? 'thinking'
+    : isSpeaking
+    ? 'speaking'
+    : 'ready';
 
   return (
     <>
@@ -259,459 +340,331 @@ export default function VoiceAssistantWidget() {
         )}
       </div>
 
-      {/* FULL HOLOGRAPHIC VOICE AI COMMAND CENTER (PROPER SCROLLABLE STUDIO) */}
+      {/* REALISTIC CONVERSATIONAL VOICE AI MODAL */}
       <AnimatePresence>
         {isWidgetOpen && (
           <div className="voice-studio-modal-backdrop" onClick={() => setIsWidgetOpen(false)}>
             <motion.div
-              className="voice-studio-modal-card"
+              className="voice-realistic-modal-card"
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.94, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 20 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
             >
-              {/* STUDIO HEADER */}
-              <div className="voice-studio-header">
-                <div className="voice-studio-header-left">
-                  <div
-                    className="voice-studio-icon-badge"
-                    style={{ background: personaInfo.avatarGradient }}
-                  >
-                    <Bot size={22} color="#fff" />
+              {/* TOP HEADER */}
+              <div className="voice-realistic-header">
+                <div className="voice-header-brand">
+                  <div className="voice-brand-badge-icon">
+                    <Leaf size={20} color="#34d399" />
                   </div>
                   <div>
-                    <div className="voice-studio-title-row">
-                      <span className="voice-studio-title">AI-Powered Voice Assistant</span>
-                      <span
-                        className="voice-studio-persona-pill"
-                        style={{
-                          backgroundColor: personaInfo.badgeColor,
-                          color: personaInfo.color,
-                          borderColor: `${personaInfo.color}50`,
-                        }}
-                      >
-                        {personaInfo.name} • {personaInfo.title}
+                    <div className="voice-brand-title-row">
+                      <span className="voice-brand-name">Mitra</span>
+                      <span className="badge-sustainability-advisor">
+                        AI Sustainability Advisor
                       </span>
                     </div>
-                    <div className="voice-studio-telemetry-meta">
-                      Powered by <strong>AI Neural Engine</strong> (Free Browser Fallback) • Active Context: {location.pathname === '/' ? 'Dashboard' : location.pathname.replace('/', '')}
-                    </div>
+                    <p className="voice-brand-tagline">
+                      Your voice companion for a cleaner, greener tomorrow.
+                    </p>
                   </div>
                 </div>
 
-                <div className="voice-studio-header-actions">
+                <div className="voice-header-actions">
                   <button
                     type="button"
-                    className={`voice-studio-btn-ghost ${apiKey ? 'active' : ''}`}
+                    className="voice-icon-tool-btn"
                     onClick={() => setShowSettings(!showSettings)}
-                    title="Voice Engine & API Configuration"
+                    title="Voice Engine Settings"
                   >
                     <Settings2 size={16} />
-                    <span>{showSettings ? 'Hide Settings' : 'Settings'}</span>
                   </button>
                   <button
                     type="button"
-                    className="voice-studio-btn-close"
+                    className="voice-icon-close-btn"
                     onClick={() => setIsWidgetOpen(false)}
-                    title="Close Voice Studio (Esc)"
+                    title="Close"
                   >
                     <X size={18} />
                   </button>
                 </div>
               </div>
 
-              {/* HOLOGRAPHIC MICROPHONE VISUALIZER VIEWPORT (Inspired by Reference Image) */}
-              <div className="voice-holo-viewport">
-                <canvas ref={canvasRef} className="voice-holo-canvas" />
-
-                {/* Central Futuristic Microphone Capsule */}
-                <div className="voice-holo-mic-capsule-container">
-                  <div
-                    className={`voice-holo-mic-orb ${isSpeaking ? 'speaking' : ''} ${isThinking ? 'thinking' : ''}`}
-                    style={{
-                      borderColor: personaInfo.color,
-                      boxShadow: `0 0 35px ${personaInfo.glowColor}, inset 0 0 25px ${personaInfo.glowColor}`,
-                    }}
+              {/* SETTINGS DRAWER (If Open) */}
+              <AnimatePresence>
+                {showSettings && (
+                  <motion.div
+                    className="voice-settings-drawer"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
                   >
-                    {/* Glowing Mic Core Icon */}
-                    <div className="voice-holo-mic-core">
-                      <Mic size={34} color="#fff" className="mic-core-svg" />
-                    </div>
+                    <div className="voice-settings-inner">
+                      <div className="voice-settings-grid">
+                        <div className="voice-setting-field">
+                          <label className="voice-setting-label">Speech Synthesis Voice:</label>
+                          <select
+                            className="voice-setting-select"
+                            value={selectedVoiceUri}
+                            onChange={(e) => setSelectedVoiceUri(e.target.value)}
+                          >
+                            <option value="">Auto-Detect Optimal Natural Voice</option>
+                            {availableVoices.map((v) => (
+                              <option key={v.voiceURI} value={v.voiceURI}>
+                                {v.name} ({v.lang})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                    {/* Circuit Aura Rings */}
-                    <div
-                      className="voice-aura-ring ring-1"
-                      style={{ borderColor: personaInfo.color }}
-                    />
-                    <div
-                      className="voice-aura-ring ring-2"
-                      style={{ borderColor: personaInfo.secondaryColor }}
-                    />
+                        <div className="voice-setting-field">
+                          <label className="voice-setting-label">Voice Cadence Speed:</label>
+                          <div className="voice-speed-buttons">
+                            {[
+                              { val: 0.92, label: '0.9x' },
+                              { val: 1.0, label: '1.0x' },
+                              { val: 1.1, label: '1.1x' },
+                            ].map(({ val, label }) => (
+                              <button
+                                key={val}
+                                type="button"
+                                className={`voice-speed-btn ${speechRate === val ? 'active' : ''}`}
+                                onClick={() => setSpeechRate(val)}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* HERO LIVING VOICE ORB & SINE WAVE CANVAS */}
+              <div className="voice-hero-orb-arena">
+                <canvas ref={canvasRef} className="voice-hero-wave-canvas" />
+
+                <div className="voice-orb-central-anchor">
+                  <div
+                    className={`voice-living-orb ${currentState}`}
+                    onClick={toggleListening}
+                    style={{ cursor: 'pointer' }}
+                    title="Tap to speak or stop"
+                  >
+                    {/* Concentric Aura Wave Rings */}
+                    <div className="voice-orb-glow-ring ring-outer" />
+                    <div className="voice-orb-glow-ring ring-middle" />
+
+                    {/* Central Icon */}
+                    <div className="voice-orb-core">
+                      {isThinking ? (
+                        <Sparkles size={32} color="#fff" className="spin-slow" />
+                      ) : isSpeaking ? (
+                        <Radio size={32} color="#fff" className="pulse-fast" />
+                      ) : isListening ? (
+                        <Mic size={32} color="#fff" className="pulse-fast" />
+                      ) : (
+                        <Mic size={32} color="#fff" />
+                      )}
+                    </div>
                   </div>
 
-                  {/* Real-time Status Badge */}
-                  <div className="voice-holo-status-badge">
-                    {isThinking ? (
-                      <span className="holo-status-text thinking">
-                        <Sparkles size={13} className="spin-slow" /> AI Neural Engine Reasoning...
-                      </span>
-                    ) : isSpeaking ? (
-                      <span className="holo-status-text speaking" style={{ color: personaInfo.color }}>
-                        <Radio size={13} className="pulse-fast" /> {personaInfo.name} Broadcasting
-                      </span>
-                    ) : (
-                      <span className="holo-status-text idle">
-                        🎙️ AI Voice Engine Ready
-                      </span>
-                    )}
+                  {/* Status Heading & Subtitle */}
+                  <div className="voice-hero-status-box">
+                    <h4 className="voice-hero-status-heading">
+                      {isListening
+                        ? 'Listening...'
+                        : isThinking
+                        ? 'Thinking & Reasoning...'
+                        : isSpeaking
+                        ? 'Speaking Response...'
+                        : 'Ready to Listen'}
+                    </h4>
+                    <p className="voice-hero-status-sub">
+                      Speak your question about energy, environment or SDG 7
+                    </p>
+                  </div>
+
+                  {/* State Indicator Pills Row */}
+                  <div className="voice-state-pills-row">
+                    <span className={`state-pill ${currentState === 'listening' ? 'active-listening' : ''}`}>
+                      <span className="dot" /> Listening
+                    </span>
+                    <span className={`state-pill ${currentState === 'thinking' ? 'active-thinking' : ''}`}>
+                      <span className="dot" /> Thinking
+                    </span>
+                    <span className={`state-pill ${currentState === 'speaking' ? 'active-speaking' : ''}`}>
+                      <span className="dot" /> Speaking
+                    </span>
+                    <span className={`state-pill ${currentState === 'ready' ? 'active-ready' : ''}`}>
+                      <span className="dot" /> Ready
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* PROPER SCROLLABLE STUDIO CONTENT BODY */}
-              <div className="voice-studio-scrollable-body">
-                {/* SETTINGS DRAWER (When toggled) */}
-                <AnimatePresence>
-                  {showSettings && (
-                    <motion.div
-                      className="voice-settings-drawer"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
-                      <div className="voice-settings-inner">
-                        <div className="voice-settings-grid">
-                          {/* Speech Voice Dropdown */}
-                          <div className="voice-setting-field">
-                            <label className="voice-setting-label">
-                              Speech Synthesis Voice (Natural Engine):
-                            </label>
-                            <select
-                              className="voice-setting-select"
-                              value={selectedVoiceUri}
-                              onChange={(e) => setSelectedVoiceUri(e.target.value)}
-                            >
-                              <option value="">Auto-Detect Optimal Natural Voice</option>
-                              {availableVoices.map((v) => (
-                                <option key={v.voiceURI} value={v.voiceURI}>
-                                  {v.name} ({v.lang})
-                                </option>
-                              ))}
-                            </select>
+              {/* CONVERSATION THREAD MESSAGES */}
+              <div className="voice-conversation-stream">
+                {conversation.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`voice-chat-bubble-row ${msg.sender === 'user' ? 'user-row' : 'ai-row'}`}
+                  >
+                    {msg.sender === 'user' ? (
+                      <div className="voice-user-message-card">
+                        <div className="bubble-author-meta">
+                          <div className="bubble-avatar user-av">
+                            <User size={13} color="#fff" />
                           </div>
+                          <span className="bubble-author-name">You</span>
+                          <span className="bubble-time">{msg.time}</span>
+                        </div>
+                        <div className="bubble-content-text">{msg.text}</div>
+                      </div>
+                    ) : (
+                      <div className="voice-ai-message-card">
+                        <div className="bubble-author-meta">
+                          <div className="bubble-avatar ai-av">
+                            <Leaf size={13} color="#34d399" />
+                          </div>
+                          <span className="bubble-author-name">Mitra</span>
+                          <span className="bubble-time">{msg.time}</span>
+                        </div>
+                        <div className="bubble-content-text">{msg.text}</div>
 
-                          {/* Speech Speed */}
-                          <div className="voice-setting-field">
-                            <label className="voice-setting-label">Speech Cadence Speed:</label>
-                            <div className="voice-speed-buttons">
-                              {[
-                                { val: 0.92, label: '0.9x (Calm)' },
-                                { val: 1.0, label: '1.0x (Normal)' },
-                                { val: 1.1, label: '1.1x (Brisk)' },
-                              ].map(({ val, label }) => (
-                                <button
-                                  key={val}
-                                  type="button"
-                                  className={`voice-speed-btn ${speechRate === val ? 'active' : ''}`}
-                                  onClick={() => setSpeechRate(val)}
-                                >
-                                  {label}
-                                </button>
+                        {/* Integrated Live Audio Playback Bar */}
+                        {isSpeaking && currentTranscript === msg.text && (
+                          <div className="bubble-audio-playback-bar">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Volume2 size={15} color="#34d399" className="pulse-fast" />
+                              <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Playing response...</span>
+                            </div>
+                            <div className="bubble-live-frequency-bars">
+                              {[12, 22, 16, 28, 14, 24, 18, 10, 20, 15, 26, 12].map((h, i) => (
+                                <div
+                                  key={i}
+                                  className="freq-bar"
+                                  style={{
+                                    height: `${Math.max(4, h * (0.4 + audioLevel * 0.8))}px`,
+                                    background: '#34d399',
+                                  }}
+                                />
                               ))}
                             </div>
+                            <span className="bubble-audio-time">Live Voice</span>
                           </div>
-                        </div>
-
-                        {/* AI Cloud Key Config */}
-                        <div className="voice-setting-field" style={{ marginTop: '0.75rem' }}>
-                          <div className="voice-key-label-row">
-                            <label className="voice-setting-label">AI Cloud API Key (Optional):</label>
-                            <span className="voice-key-active-badge">
-                              {apiKey ? '✓ AI Cloud Engine Active' : '✓ Browser Native Engine (Free Fallback)'}
-                            </span>
-                          </div>
-                          <div className="voice-key-input-row">
-                            <input
-                              type="password"
-                              value={tempKey}
-                              onChange={(e) => setTempKey(e.target.value)}
-                              placeholder="AI Key (Reads automatically from .env)"
-                              className="voice-key-input"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleSaveKey}
-                              className="voice-key-save-btn"
-                            >
-                              {keySavedToast ? <Check size={14} /> : 'Save Key'}
-                            </button>
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-                {/* PERSONA SWITCHER CARDS */}
-                <div className="voice-persona-cards-row">
-                  {/* MITRA */}
-                  <div
-                    className={`voice-persona-tile ${activePersona === 'mitra' ? 'active-mitra' : ''}`}
-                    onClick={() => {
-                      setActivePersona('mitra');
-                      if (!isSpeaking && !isThinking) {
-                        speak('Mitra active. Evaluating environmental sustainability.', 'mitra');
-                      }
+              {/* TEXT INPUT TOGGLE (If clicked "Type instead") */}
+              <AnimatePresence>
+                {showTextInput && (
+                  <motion.form
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!customPrompt.trim()) return;
+                      handleUserQuery(customPrompt);
+                      setCustomPrompt('');
+                      setShowTextInput(false);
                     }}
+                    className="voice-type-instead-form"
                   >
-                    <div className="persona-tile-top">
-                      <div className="persona-tile-avatar mitra-bg" title="Mitra — AI Sustainability Advisor">
-                        <Leaf size={19} color="#34d399" />
-                      </div>
-                      <div>
-                        <div className="persona-tile-name">Mitra</div>
-                        <div className="persona-tile-role">AI Sustainability Advisor</div>
-                      </div>
-                    </div>
-                    <p className="persona-tile-desc">
-                      Warm &amp; articulate. Highlights clean renewable ratio, CO₂ avoided, and SDG 7 alignment.
-                    </p>
+                    <input
+                      type="text"
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      placeholder="Type your question about clean energy, solar, wind, or SDG 7..."
+                      className="voice-type-instead-input"
+                      autoFocus
+                    />
+                    <button type="submit" className="voice-type-submit-btn">
+                      <Send size={14} color="#0f172a" />
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {/* BOTTOM CONTROL & ACTION BAR */}
+              <div className="voice-realistic-bottom-bar">
+                {/* Left: Type instead button */}
+                <button
+                  type="button"
+                  className="voice-type-toggle-btn"
+                  onClick={() => setShowTextInput(!showTextInput)}
+                >
+                  <Keyboard size={15} />
+                  <span>{showTextInput ? 'Hide Keyboard' : 'Type instead'}</span>
+                </button>
+
+                {/* Center: Live Pulsing Action Button */}
+                <div className="voice-center-action-cluster">
+                  {/* Left audio bars */}
+                  <div className="action-side-frequency-bars">
+                    {[10, 18, 14, 22, 8].map((h, i) => (
+                      <div
+                        key={i}
+                        className="freq-bar"
+                        style={{
+                          height: `${Math.max(3, h * (isSpeaking || isListening ? 1.2 : 0.3))}px`,
+                          background: isListening ? '#38bdf8' : '#22c55e',
+                        }}
+                      />
+                    ))}
                   </div>
 
-                  {/* MILES */}
-                  <div
-                    className={`voice-persona-tile ${activePersona === 'miles' ? 'active-miles' : ''}`}
-                    onClick={() => {
-                      setActivePersona('miles');
-                      if (!isSpeaking && !isThinking) {
-                        speak('Dispatcher Miles online. Monitoring real-time grid telemetry.', 'miles');
-                      }
-                    }}
-                  >
-                    <div className="persona-tile-top">
-                      <div className="persona-tile-avatar miles-bg" title="Miles — Grid Operations Dispatcher">
-                        <Activity size={19} color="#60a5fa" />
-                      </div>
-                      <div>
-                        <div className="persona-tile-name">Miles</div>
-                        <div className="persona-tile-role">Grid Operations Dispatcher</div>
-                      </div>
-                    </div>
-                    <p className="persona-tile-desc">
-                      Crisp &amp; commanding. Reports active megawatts, battery SoC buffer reserves, and dispatch loads.
-                    </p>
-                  </div>
-                </div>
-
-                {/* PLAYBACK & CONTROL BAR */}
-                <div className="voice-studio-control-bar">
-                  <div className="voice-studio-status-summary">
-                    <span className="live-pulsing-dot" />
-                    <span>
-                      {isThinking
-                        ? 'AI Neural Engine synthesizing situational telemetry...'
-                        : isSpeaking
-                        ? `${personaInfo.name} is speaking...`
-                        : 'Ready for live query or telemetry briefing'}
+                  <div className="voice-action-btn-anchor">
+                    <button
+                      type="button"
+                      className={`voice-main-action-orb-btn ${isSpeaking || isListening ? 'btn-stop-state' : 'btn-speak-state'}`}
+                      onClick={toggleListening}
+                      title={isSpeaking || isListening ? 'Tap to Stop' : 'Tap to Speak'}
+                    >
+                      {isSpeaking || isListening ? (
+                        <Square size={18} style={{ fill: '#fff' }} />
+                      ) : (
+                        <Mic size={20} color="#fff" />
+                      )}
+                    </button>
+                    <span className="voice-action-sublabel">
+                      {isSpeaking || isListening ? 'Tap to stop' : 'Tap to speak'}
                     </span>
                   </div>
 
-                  <div className="voice-studio-buttons-group">
-                    {isSpeaking && (
-                      <>
-                        {isPaused ? (
-                          <button
-                            type="button"
-                            className="btn-voice-ctrl"
-                            onClick={resumeSpeaking}
-                          >
-                            <Play size={14} /> Resume
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn-voice-ctrl"
-                            onClick={pauseSpeaking}
-                          >
-                            <Pause size={14} /> Pause
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn-voice-ctrl stop"
-                          onClick={stopSpeaking}
-                        >
-                          <Square size={14} /> Stop
-                        </button>
-                      </>
-                    )}
-
-                    {!isSpeaking && !isThinking && (
-                      <button
-                        type="button"
-                        className="btn-voice-brief-primary"
-                        onClick={() => speakLiveBriefing(results, params, location.pathname, realData)}
-                        style={{ background: personaInfo.avatarGradient }}
-                      >
-                        <Sparkles size={15} />
-                        <span>🎙 Brief Me</span>
-                      </button>
-                    )}
+                  {/* Right audio bars */}
+                  <div className="action-side-frequency-bars">
+                    {[8, 22, 14, 18, 10].map((h, i) => (
+                      <div
+                        key={i}
+                        className="freq-bar"
+                        style={{
+                          height: `${Math.max(3, h * (isSpeaking || isListening ? 1.2 : 0.3))}px`,
+                          background: isListening ? '#38bdf8' : '#22c55e',
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                {/* LIVE SPOKEN TELEMETRY CAPTIONS */}
-                <div className="voice-studio-transcript-container">
-                  <div className="voice-transcript-header-bar">
-                    <div className="transcript-title-wrap">
-                      <Radio size={14} className={isSpeaking ? 'pulse-fast text-emerald-400' : ''} />
-                      <span>Live Spoken Telemetry ({personaInfo.name})</span>
-                    </div>
-                    {currentTranscript && (
-                      <button
-                        type="button"
-                        className="transcript-replay-btn"
-                        onClick={() => speak(currentTranscript)}
-                        title="Replay speech"
-                      >
-                        <RefreshCw size={12} /> Replay
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="voice-transcript-display">
-                    {isThinking ? (
-                      <div className="voice-thinking-shimmer-box">
-                        <div className="shimmer-bar bar-1" />
-                        <div className="shimmer-bar bar-2" />
-                      </div>
-                    ) : currentTranscript ? (
-                      <p className="voice-transcript-text">"{currentTranscript}"</p>
-                    ) : (
-                      <p className="voice-transcript-idle">
-                        Ask a question or click "🎙 Brief Me" to hear live situational telemetry narrated for {realData.location}...
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* INTERACTIVE QUESTION INPUT BAR */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!customPrompt.trim() || isThinking) return;
-                    askCopilot({
-                      prompt: customPrompt,
-                      results,
-                      params,
-                      activeRoute: location.pathname,
-                      realConditions: realData,
-                    });
-                    setCustomPrompt('');
-                  }}
-                  className="voice-studio-prompt-form"
+                {/* Right: Quick Brief Button */}
+                <button
+                  type="button"
+                  className="voice-quick-brief-btn"
+                  onClick={() => speakLiveBriefing(results, params, location.pathname, realData)}
+                  title="Narrate live situational briefing"
                 >
-                  <input
-                    type="text"
-                    value={customPrompt}
-                    onChange={(e) => setCustomPrompt(e.target.value)}
-                    placeholder={`Ask ${personaInfo.name} anything (e.g. "Explain current conditions in ${realData.location}")...`}
-                    className="voice-studio-prompt-input"
-                    disabled={isThinking}
-                  />
-                  <button
-                    type="submit"
-                    disabled={!customPrompt.trim() || isThinking}
-                    className="voice-studio-prompt-submit"
-                    style={{ backgroundColor: personaInfo.color }}
-                  >
-                    <Send size={15} color="#0f172a" />
-                  </button>
-                </form>
-
-                {/* QUICK PROMPT PILLS (Dynamic Context-Aware Actions) */}
-                <div className="voice-studio-pills-row">
-                  {[
-                    { label: '🎙 Brief Me', q: 'Brief Me: What is happening across our microgrid right now?' },
-                    { label: '🌤 Current Conditions', q: `Explain current weather and solar irradiance conditions in ${realData.location}.` },
-                    { label: '☀️ Solar Generation', q: `Explain our solar generation with current irradiance of ${realData.solarIrradiance} W/m².` },
-                    { label: '💨 Wind Generation', q: `Explain our wind turbine generation under current wind velocity of ${realData.windSpeed} m/s.` },
-                    { label: '🎯 SDG 7 Score', q: 'Explain my SDG 7 score and clean energy impact.' },
-                    { label: '🔋 Battery Storage', q: 'Analyze our BESS Megapack battery reserve and optimize our dispatch schedule.' },
-                  ].map(({ label, q }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      className="voice-studio-pill-btn"
-                      onClick={() =>
-                        askCopilot({
-                          prompt: q,
-                          results,
-                          params,
-                          activeRoute: location.pathname,
-                          realConditions: realData,
-                        })
-                      }
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* QUICK ASSET CLIPS */}
-                <div className="voice-studio-assets-section">
-                  <div className="voice-assets-title">Inspect 3D Digital Twin Assets:</div>
-                  <div className="voice-assets-grid">
-                    <button
-                      type="button"
-                      className="voice-asset-card"
-                      onClick={() => speakAssetReport('solar', results, params, location.pathname)}
-                    >
-                      <Sun size={16} color="#f59e0b" />
-                      <div className="asset-card-text">
-                        <span className="asset-name">Solar PV Field</span>
-                        <span className="asset-metric">{(results?.solarEnergy || 0).toFixed(1)} kWh</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="voice-asset-card"
-                      onClick={() => speakAssetReport('wind', results, params, location.pathname)}
-                    >
-                      <Wind size={16} color="#3b82f6" />
-                      <div className="asset-card-text">
-                        <span className="asset-name">Wind Array</span>
-                        <span className="asset-metric">{(results?.windEnergy || 0).toFixed(1)} kWh</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="voice-asset-card"
-                      onClick={() => speakAssetReport('battery', results, params, location.pathname)}
-                    >
-                      <Battery size={16} color="#8b5cf6" />
-                      <div className="asset-card-text">
-                        <span className="asset-name">Megapack BESS</span>
-                        <span className="asset-metric">{Math.round(results?.batterySoC || 60)}% SoC</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="voice-asset-card"
-                      onClick={() => speakAssetReport('hydro', results, params, location.pathname)}
-                    >
-                      <Droplets size={16} color="#06b6d4" />
-                      <div className="asset-card-text">
-                        <span className="asset-name">Hydro &amp; Biomass</span>
-                        <span className="asset-metric">{(results?.hydroEnergy || 0).toFixed(1)} kWh</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
+                  <Sparkles size={14} color="#fbbf24" />
+                  <span>Brief Me</span>
+                </button>
               </div>
             </motion.div>
           </div>
