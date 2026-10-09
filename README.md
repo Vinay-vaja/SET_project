@@ -249,7 +249,7 @@ flowchart TD
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
-- npm or yarn
+- npm or yarn any
 
 ### Installation
 ```bash
