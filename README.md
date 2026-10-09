@@ -4,6 +4,38 @@
 
 ---
 
+## 🛠️ Technology Stack
+
+<p align="left">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/Three.js-0.185-black?style=for-the-badge&logo=threedotjs&logoColor=white" alt="Three.js 0.185" />
+  <img src="https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js 18+" />
+</p>
+
+| Domain | Technology | Version | Purpose |
+| :--- | :--- | :---: | :--- |
+| **UI Framework** | React + Vite | 19 / 8 | Fast, modern client-side SPA architecture |
+| **3D Graphics** | Three.js + WebGL | 0.185 | Interactive 3D Digital Twin campus & asset rendering |
+| **Animation** | GSAP + Framer Motion | 3.15 / 14 | Particle flows, page transitions & pipeline animations |
+| **Charting** | Recharts | 3.10 | Area, Bar, Donut, Radar analytics charts |
+| **Smooth Scroll** | Lenis | 1.3 | Buttery-smooth page scrolling |
+| **Routing** | React Router DOM | 7 | Client-side navigation (8 routes) |
+| **Icons** | Lucide React | 1.53 | Clean SVG icon set |
+| **Counters** | React CountUp | 6.5 | Animated KPI number transitions |
+| **Styling** | Vanilla CSS | — | Custom Eco-Obsidian design system & glassmorphism |
+| **AI Voice** | Gemini API | — | Cloud neural speech synthesis for AI personas |
+| **Linting** | OxLint | 1.81 | Fast Rust-based linter |
+| **Language** | JavaScript (JSX) | ES2024 | No TypeScript; `@types/react` installed as devDep |
+
+---
+
+## 🚀 Live Demo
+
+> **Deployed Application:** [🔗https://set-visulizer-mopec-ldce.vercel.app/](https://set-visulizer-mopec-ldce.vercel.app/)
+
+---
+
 ## 🧭 System Architecture & Energy Flow
 
 ```mermaid
@@ -46,7 +78,8 @@ Most renewable energy simulators are static calculators or black-box spreadsheet
 **GreenPulse** transforms complex energy science into an intuitive, visual, and explainable experience:
 - **Interactive Multi-Stage Physics**: Visualizes the exact mechanical, chemical, and electrical stages of 4 renewable sources.
 - **Real-Time 3D Digital Twin**: Lets users inspect an industrial clean energy campus in 3D WebGL with live turbine rotations, day/night cycles, and camera presets.
-- **AI-Powered Voice Studio**: Enables hands-free audio briefings narrated by two specialized AI personas (**Mitra** and **Miles**).
+- **AI-Powered Voice Studio**: Enables hands-free audio briefings narrated by two specialized AI personas (**Mitra** and **Miles**) via the Gemini API.
+- **Real Weather & Location Data**: Fetches live weather and solar irradiance data via external APIs to enrich simulation defaults.
 - **Eco-Obsidian Design System**: Replaces dull blue interfaces with high-contrast obsidian carbon (`#070b12`), frosted glass, and vibrant nature-coded accents.
 
 ---
@@ -155,19 +188,19 @@ flowchart TD
     MITRA --> ROUTER{"Synthesis Engine Router"}
     MILES --> ROUTER
 
-    ROUTER -->|API Key Configured| CLOUD["🧠 Primary Engine: Cloud AI Neural Synthesis<br/>Situational real-time telemetry analysis"]
+    ROUTER -->|API Key Configured| CLOUD["🧠 Primary Engine: Gemini Cloud AI Neural Synthesis<br/>Situational real-time telemetry analysis"]
     ROUTER -->|Fallback / Offline| BROWSER["🔊 Fallback Engine: Browser Native Speech<br/>100% Free, zero-latency, offline synthesis"]
 
     CLOUD --> AUDIO["🎧 Clear Audio Output (Full Uncut Sentences)"]
     BROWSER --> AUDIO
 ```
 
-* **What It Is**: An intelligent audio debriefing studio featuring two specialized AI copilot personas.
+* **What It Is**: An intelligent audio debriefing studio featuring two specialized AI copilot personas powered by the **Gemini API**.
 * **Why We Built It**: Operators and students can listen to situational microgrid debriefs without taking their eyes off the 3D twin or charts.
 * **Key Capabilities**:
   - **Mitra**: Focuses on ecological impact, carbon offset milestones, and UN SDG 7 scorecard progress.
   - **Miles**: Focuses on electrical engineering, generation megawatts, battery State of Charge, and dispatch loads.
-  - **Fail-Safe Architecture**: Cloud AI neural synthesis as primary engine with automatic instant fallback to the browser's native speech synthesizer.
+  - **Fail-Safe Architecture**: Gemini cloud AI neural synthesis as primary engine with automatic instant fallback to the browser's native speech synthesizer.
   - **Guaranteed Full Responses**: Generates complete thoughts and sentences without mid-sentence truncation.
 
 ---
@@ -183,10 +216,21 @@ flowchart TD
   - **Click-to-Inspect**: Clicking any source node immediately opens that source's physics pipeline.
 * **Physics Process Simulator (`GenerationProcessViewer`)**:
   - Deep-dive 4-stage pipeline with interactive sliders for solar irradiance, cell temp, wind speed, hydraulic head height, water flow rate, biomass feedstock type, and moisture content.
+* **Interactive Eco-Sphere** (`InteractiveEcoSphere`):
+  - A Three.js globe visualization showcasing global renewable energy adoption and SDG metrics interactively.
 
 ---
 
-### 7. 🎨 The "Pristine Eco-Obsidian" Theme
+### 7. 🌍 Real-World Data Services
+
+* **Weather & Location Service**: Fetches real-time weather data and automatically detects user location to pre-fill simulation defaults with realistic local conditions.
+* **Solar Data Service**: Integrates with solar irradiance APIs to provide geographically accurate insolation data for the simulator.
+* **Real Data Context** (`RealDataContext`): Centralized React context that manages live API data and exposes it to all simulator components.
+* **Custom Hook** (`useRealConditions`): A clean abstraction hook consuming live weather/solar data and mapping it into simulation parameter format.
+
+---
+
+### 8. 🎨 The "Pristine Eco-Obsidian" Theme
 
 * **Design Philosophy**: Replaced dull, muddy blue backgrounds with an ultra-clean **Eco-Obsidian Carbon & Frosted Glass** visual language:
   - **Background**: Deep carbon obsidian (`#070b12` / `#0c121d`) with zero blue glare.
@@ -198,19 +242,6 @@ flowchart TD
     - 🌿 **Biomass**: Living Eco Emerald (`#10b981`)
     - 🔋 **Battery**: Neon Violet / Lime (`#8b5cf6` / `#22c55e`)
     - ⚡ **Grid**: High-Contrast Alert Coral (`#ef4444`)
-
----
-
-## 🛠️ Technology Stack
-
-| Domain | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Framework** | React 19 + Vite | Fast, modern client application architecture |
-| **3D Graphics** | Three.js + WebGL | Interactive 3D Digital Twin campus and asset rendering |
-| **Animation** | GSAP + Framer Motion | Smooth particle flows, stage transitions, and pipeline cards |
-| **Calculations** | Modular Physics Engines | Real-world engineering calculations for Solar, Wind, Hydro, Biomass, and Battery |
-| **Charts & Data** | Recharts + Lucide React | Clean, high-contrast analytics, radar charts, and iconography |
-| **Styling** | Vanilla CSS Design System | Custom Eco-Obsidian design system tokens and glassmorphism |
 
 ---
 
@@ -235,7 +266,7 @@ npm install
 ### Environment Configuration (Optional)
 Create a `.env` file in the root directory to configure cloud intelligence features:
 ```env
-VITE_GEMINI_API_KEY=your_api_key_here
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 *(If no API key is provided, GreenPulse automatically falls back to the native offline browser speech engine!)*
 
@@ -255,42 +286,108 @@ npm run build
 ## 📁 Project Directory Structure
 
 ```
-SET_Project/
-├── public/                     # Static brand assets & vector logos
+SET_project/
+├── public/                             # Static brand assets & vector logos
+│   ├── favicon.ico / favicon.png       # App icons (multiple formats)
+│   ├── favicon.svg                     # SVG favicon
+│   ├── apple-touch-icon.png            # iOS home screen icon
+│   ├── logo.png / logo-icon.png        # Brand logos
+│   ├── hero-landscape.jpg              # Hero background image
+│   └── icons.svg                       # SVG icon sprite
+│
+├── Project Report/                     # Academic project documentation
+│   └── Greenpulse-Sustainable_Enery_Transition.pdf
+│
 ├── src/
-│   ├── components/             # Reusable UI, 3D, and Visualization Components
-│   │   ├── DigitalTwin3D.jsx           # 3D Industrial campus (Three.js WebGL)
-│   │   ├── EnergyFlowDiagram.jsx       # 2D animated energy routing schematic (GSAP)
-│   │   ├── GenerationProcessViewer.jsx # 4-stage physics conversion simulator
-│   │   ├── VoiceAssistantWidget.jsx    # Mitra & Miles AI Voice Studio
-│   │   ├── Navbar.jsx                  # Top navigation & system health badge
-│   │   ├── KPICard.jsx                 # Live metrics and telemetry cards
-│   │   └── SliderInput.jsx             # Physics parameter controls
-│   ├── context/
-│   │   ├── EnergyContext.jsx           # Central microgrid state & calculation dispatcher
-│   │   └── VoiceContext.jsx            # Speech synthesis & persona management
-│   ├── data/
-│   │   └── energyConstants.js          # Physics constants, emission factors, defaults
-│   ├── pages/
-│   │   ├── Simulator.jsx               # Main simulation cockpit & viewport switcher
-│   │   ├── Dashboard.jsx               # Executive KPI overview & metrics
-│   │   ├── Compare.jsx                 # Multi-scenario configuration comparison
-│   │   ├── SDGImpact.jsx               # UN SDG 7 scorecard & ESG indicators
-│   │   ├── EnergyAudit.jsx             # Facility energy audit calculator
-│   │   ├── WasteToEnergy.jsx           # Biomass and circular bioeconomy modeling
-│   │   └── EmergingTech.jsx            # Hydrogen, micro-hydro, and wave technologies
-│   ├── utils/                          # Calculation engines
+│   ├── main.jsx                        # React DOM root entry point
+│   ├── App.jsx                         # Router + layout shell + AnimatePresence
+│   ├── App.css                         # App-level styles
+│   ├── index.css                       # Full global design system (CSS variables,
+│   │                                   # tokens, utilities, glassmorphism, etc.)
+│   │
+│   ├── context/                        # Global React Contexts
+│   │   ├── EnergyContext.jsx           # Central state: params, simulation results,
+│   │   │                               # liveResults (useMemo), runSimulation fn
+│   │   ├── VoiceContext.jsx            # Speech synthesis & AI persona management
+│   │   └── RealDataContext.jsx         # Live weather & solar API data context
+│   │
+│   ├── data/                           # Static datasets & constants
+│   │   ├── energyConstants.js          # DEFAULT_PARAMS, CO2_FACTORS, calorific
+│   │   │                               # values, hydrogen constants, SDG weights
+│   │   ├── sdgData.js                  # SDG goal metadata (labels, descriptions)
+│   │   └── technologies.js             # Emerging tech catalog
+│   │
+│   ├── hooks/                          # Custom React Hooks
+│   │   └── useRealConditions.js        # Hook: maps live weather/solar → sim params
+│   │
+│   ├── services/                       # External API integration layer
+│   │   ├── locationService.js          # Browser geolocation & reverse geocoding
+│   │   ├── weatherService.js           # Real-time weather data fetching
+│   │   ├── solarDataService.js         # Solar irradiance API integration
+│   │   └── realDataService.js          # Unified real-world data orchestrator
+│   │
+│   ├── utils/                          # Calculation engines (pure functions)
 │   │   ├── solarCalculations.js        # Irradiance, PV effect & temp derating
 │   │   ├── windCalculations.js         # Betz limit, air density & turbine power curve
 │   │   ├── hydroCalculations.js        # Hydraulic head, flow rate & Francis turbine
 │   │   ├── biomassCalculations.js      # Feedstock LHV, moisture & CHP cogeneration
 │   │   ├── batteryCalculations.js      # Round-trip efficiency & SoC limits
-│   │   └── sdgScore.js                 # Multi-criteria SDG 7 scoring algorithm
-│   ├── App.jsx                         # Application router & main layout
-│   └── index.css                       # Eco-Obsidian design system & animations
-├── package.json
-└── vite.config.js
+│   │   ├── sdgScore.js                 # Multi-criteria SDG 7/9/11/12/13 scoring
+│   │   ├── auditCalculations.js        # Energy audit math + recommendation engine
+│   │   ├── hydrogenCalculations.js     # Green/grey/blue hydrogen economics
+│   │   ├── wasteCalculations.js        # Waste-to-energy conversion math
+│   │   └── geminiVoiceService.js       # Gemini API speech & text generation client
+│   │
+│   ├── components/                     # Reusable UI & visualization components
+│   │   ├── Navbar.jsx                  # Top navigation bar (glassmorphic, 8 links)
+│   │   ├── KPICard.jsx                 # Metric display card with animated number
+│   │   ├── AnimatedNumber.jsx          # React CountUp wrapper
+│   │   ├── SliderInput.jsx             # Labeled range slider for simulator params
+│   │   ├── EnergyFlowDiagram.jsx       # SVG/Canvas animated energy flow schematic
+│   │   ├── DigitalTwin3D.jsx           # Three.js 3D scene (40KB — largest file)
+│   │   ├── GenerationProcessViewer.jsx # 4-stage physics conversion pipeline viewer
+│   │   ├── InteractiveEcoSphere.jsx    # Three.js globe: global SDG & energy map
+│   │   ├── SDGScoreRing.jsx            # Circular progress ring for SDG scores
+│   │   ├── VoiceAssistantWidget.jsx    # Mitra & Miles AI Voice Studio widget
+│   │   └── simulation/                 # Per-source simulation sub-views
+│   │       ├── SimulationViewport.jsx  # Container & switcher for simulation views
+│   │       ├── SolarSimulationView.jsx # Solar physics deep-dive interactive view
+│   │       ├── WindSimulationView.jsx  # Wind physics deep-dive interactive view
+│   │       ├── HydroSimulationView.jsx # Hydro physics deep-dive interactive view
+│   │       └── BiomassSimulationView.jsx # Biomass CHP deep-dive interactive view
+│   │
+│   └── pages/                          # Route-level page components (8 routes)
+│       ├── Dashboard.jsx               # Overview: KPIs, donut chart, 24h/7d charts
+│       ├── Simulator.jsx               # Main simulator: sliders + 3D twin + results
+│       ├── EnergyAudit.jsx             # Equipment energy auditor + recommendations
+│       ├── Compare.jsx                 # Side-by-side scenario comparison
+│       ├── SDGImpact.jsx               # SDG 7/9/11/12/13 scores + radar chart
+│       ├── EmergingTech.jsx            # Emerging clean energy technologies showcase
+│       ├── WasteToEnergy.jsx           # Waste-to-energy circular economy calculator
+│       └── About.jsx                   # Platform info & team page
+│
+├── index.html                          # Vite HTML entry point
+├── vite.config.js                      # Vite + React plugin configuration
+├── package.json                        # Dependencies & npm scripts
+├── .oxlintrc.json                      # OxLint rules (Rust-based linter)
+├── PROJECT_ANALYSIS.txt                # Detailed internal code analysis report
+└── .gitignore                          # Standard ignore (node_modules, dist, etc.)
 ```
+
+---
+
+## 🗺️ Application Routes
+
+| Route | Page | Description |
+| :--- | :--- | :--- |
+| `/` | Dashboard | Executive KPI overview, energy mix donut, 24h & 7-day charts, flow diagram, SDG rings |
+| `/simulator` | Simulator | Main feature: configure all params via sliders, run simulation, inspect 3D twin & what-if solar analysis |
+| `/energy-audit` | EnergyAudit | Add equipment list, get consumption analysis & efficiency saving recommendations |
+| `/compare` | Compare | Side-by-side configuration scenario comparison |
+| `/sdg-impact` | SDGImpact | SDG 7/9/11/12/13 scores, radar chart, before/after baseline impact comparison |
+| `/emerging-technologies` | EmergingTech | Emerging clean energy technologies info (hydrogen, micro-hydro, wave) |
+| `/waste-to-energy` | WasteToEnergy | Circular bioeconomy waste-to-energy calculator |
+| `/about` | About | Platform info, methodology & project details |
 
 ---
 
